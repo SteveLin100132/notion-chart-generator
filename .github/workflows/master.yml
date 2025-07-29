@@ -5,6 +5,11 @@ on:
     branches:
       - "master"
 
+permissions:
+  contents: read
+  packages: write
+  actions: write
+
 env:
   GITHUB_ACTOR: ${{ github.actor }}
   APP_VERSION: ${{ vars.APP_VERSION }}
@@ -100,14 +105,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Convert repository name to lowercase
+        id: repo-lower
+        run: echo "repo=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ env.IMAGE_REPO }}/${{ env.IMAGE_NAME }}
+          images: ghcr.io/${{ steps.repo-lower.outputs.repo }}
           tags: |
             type=raw,value=${{ needs.bump-version.outputs.new_version }}
             type=raw,value=latest
+          labels: |
+            org.opencontainers.image.title=${{ env.IMAGE_NAME }}
+            org.opencontainers.image.description=Notion Chart Generator
+            org.opencontainers.image.version=${{ needs.bump-version.outputs.new_version }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
