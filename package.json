@@ -27,7 +27,7 @@
     "react",
     "nestjs"
   ],
-  "author": "Notion Chart Team",
+  "author": "Steve CY Lin",
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2"
