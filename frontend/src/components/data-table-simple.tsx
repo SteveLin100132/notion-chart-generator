@@ -8,113 +8,245 @@ interface DataTableProps {
   className?: string
 }
 
-// Notion 屬性值解析函數
-const formatNotionPropertyValue = (property: any): string => {
-  if (!property) return '-'
+// Notion 屬性值解析函數 - 返回結構化數據以支持不同的渲染方式
+const parseNotionPropertyValue = (property: any): { type: string, value: any, displayText: string } => {
+  if (!property) return { type: 'text', value: '-', displayText: '-' }
   
   // 如果是字串或數字，直接返回
   if (typeof property === 'string' || typeof property === 'number') {
-    return String(property)
+    return { type: 'text', value: property, displayText: String(property) }
   }
   
   // 如果沒有 type 屬性，可能是舊格式或簡化格式
   if (!property.type) {
     if (Array.isArray(property)) {
-      return property.map(item => {
+      const text = property.map(item => {
         if (typeof item === 'object' && item.plain_text) {
           return item.plain_text
         }
         return String(item)
       }).join('')
+      return { type: 'text', value: text, displayText: text }
     }
-    return String(property)
+    return { type: 'text', value: property, displayText: String(property) }
   }
   
   switch (property.type) {
     case 'title':
-      return property.title?.map((t: any) => t.plain_text).join('') || '-'
+      const titleText = property.title?.map((t: any) => t.plain_text).join('') || '-'
+      return { type: 'text', value: titleText, displayText: titleText }
+      
     case 'rich_text':
-      return property.rich_text?.map((t: any) => t.plain_text).join('') || '-'
+      const richText = property.rich_text?.map((t: any) => t.plain_text).join('') || '-'
+      return { type: 'text', value: richText, displayText: richText }
+      
     case 'number':
-      return property.number?.toString() || '-'
+      const numberValue = property.number?.toString() || '-'
+      return { type: 'text', value: numberValue, displayText: numberValue }
+      
     case 'select':
-      return property.select?.name || '-'
+      const selectValue = property.select?.name || '-'
+      const selectColor = property.select?.color || 'default'
+      return { 
+        type: 'select', 
+        value: { name: selectValue, color: selectColor }, 
+        displayText: selectValue 
+      }
+      
     case 'multi_select':
-      return property.multi_select?.map((s: any) => s.name).join(', ') || '-'
+      const multiSelectItems = property.multi_select || []
+      return { 
+        type: 'multi_select', 
+        value: multiSelectItems, 
+        displayText: multiSelectItems.map((s: any) => s.name).join(', ') || '-'
+      }
+      
     case 'status':
-      // 處理狀態欄位
-      return property.status?.name || '-'
+      const statusValue = property.status?.name || '-'
+      const statusColor = property.status?.color || 'default'
+      return { 
+        type: 'status', 
+        value: { name: statusValue, color: statusColor }, 
+        displayText: statusValue 
+      }
+      
     case 'date':
-      return property.date?.start || '-'
+      const dateValue = property.date?.start || '-'
+      return { type: 'text', value: dateValue, displayText: dateValue }
+      
     case 'checkbox':
-      return property.checkbox ? '✓' : '✗'
+      const checkboxValue = property.checkbox ? '✓' : '✗'
+      return { type: 'text', value: checkboxValue, displayText: checkboxValue }
+      
     case 'url':
-      return property.url || '-'
+      const urlValue = property.url || '-'
+      return { type: 'text', value: urlValue, displayText: urlValue }
+      
     case 'email':
-      return property.email || '-'
+      const emailValue = property.email || '-'
+      return { type: 'text', value: emailValue, displayText: emailValue }
+      
     case 'phone_number':
-      return property.phone_number || '-'
+      const phoneValue = property.phone_number || '-'
+      return { type: 'text', value: phoneValue, displayText: phoneValue }
+      
     case 'formula':
-      // 處理公式欄位
       if (property.formula) {
         if (property.formula.type === 'string') {
-          return property.formula.string || '-'
+          const formulaText = property.formula.string || '-'
+          return { type: 'text', value: formulaText, displayText: formulaText }
         } else if (property.formula.type === 'number') {
-          return property.formula.number?.toString() || '-'
+          const formulaNumber = property.formula.number?.toString() || '-'
+          return { type: 'text', value: formulaNumber, displayText: formulaNumber }
         } else if (property.formula.type === 'boolean') {
-          return property.formula.boolean ? '✓' : '✗'
+          const formulaBool = property.formula.boolean ? '✓' : '✗'
+          return { type: 'text', value: formulaBool, displayText: formulaBool }
         } else if (property.formula.type === 'date') {
-          return property.formula.date?.start || '-'
+          const formulaDate = property.formula.date?.start || '-'
+          return { type: 'text', value: formulaDate, displayText: formulaDate }
         } else {
-          // 遞歸處理其他類型的公式結果
-          return formatNotionPropertyValue(property.formula) || '-'
+          const result = parseNotionPropertyValue(property.formula)
+          return result
         }
       }
-      return '-'
+      return { type: 'text', value: '-', displayText: '-' }
+      
     case 'relation':
-      return `${property.relation?.length || 0} 個關聯`
+      const relationText = `${property.relation?.length || 0} 個關聯`
+      return { type: 'text', value: relationText, displayText: relationText }
+      
     case 'rollup':
-      // 處理彙總欄位
       if (property.rollup) {
         if (property.rollup.type === 'number') {
-          return property.rollup.number?.toString() || '-'
+          const rollupNumber = property.rollup.number?.toString() || '-'
+          return { type: 'text', value: rollupNumber, displayText: rollupNumber }
         } else if (property.rollup.type === 'array') {
-          return `${property.rollup.array?.length || 0} 個項目`
+          const rollupArray = `${property.rollup.array?.length || 0} 個項目`
+          return { type: 'text', value: rollupArray, displayText: rollupArray }
         } else if (property.rollup.type === 'date') {
-          return property.rollup.date?.start || '-'
+          const rollupDate = property.rollup.date?.start || '-'
+          return { type: 'text', value: rollupDate, displayText: rollupDate }
         } else {
-          return formatNotionPropertyValue(property.rollup) || '-'
+          const result = parseNotionPropertyValue(property.rollup)
+          return result
         }
       }
-      return '-'
+      return { type: 'text', value: '-', displayText: '-' }
+      
     case 'people':
-      return property.people?.map((p: any) => p.name).join(', ') || '-'
+      const peopleText = property.people?.map((p: any) => p.name).join(', ') || '-'
+      return { type: 'text', value: peopleText, displayText: peopleText }
+      
     case 'files':
-      return `${property.files?.length || 0} 個檔案`
+      const filesText = `${property.files?.length || 0} 個檔案`
+      return { type: 'text', value: filesText, displayText: filesText }
+      
     case 'created_time':
     case 'last_edited_time':
-      return new Date(property[property.type]).toLocaleDateString('zh-TW')
+      const timeValue = new Date(property[property.type]).toLocaleDateString('zh-TW')
+      return { type: 'text', value: timeValue, displayText: timeValue }
+      
     case 'created_by':
     case 'last_edited_by':
-      return property[property.type]?.name || '-'
+      const userValue = property[property.type]?.name || '-'
+      return { type: 'text', value: userValue, displayText: userValue }
+      
     case 'unique_id':
-      return property.unique_id?.number?.toString() || property.unique_id?.prefix || '-'
+      const uniqueIdValue = property.unique_id?.number?.toString() || property.unique_id?.prefix || '-'
+      return { type: 'text', value: uniqueIdValue, displayText: uniqueIdValue }
+      
     default:
-      // 對於未知類型，嘗試智能解析
       console.log('Unknown property type:', property.type, property)
       
-      // 檢查是否有常見的值屬性
       if (property.value !== undefined) {
-        return String(property.value)
+        return { type: 'text', value: property.value, displayText: String(property.value) }
       }
       if (property.name !== undefined) {
-        return String(property.name)
+        return { type: 'text', value: property.name, displayText: String(property.name) }
       }
       if (property.text !== undefined) {
-        return String(property.text)
+        return { type: 'text', value: property.text, displayText: String(property.text) }
       }
       
-      return `[${property.type}]`
+      return { type: 'text', value: `[${property.type}]`, displayText: `[${property.type}]` }
+  }
+}
+
+// Badge 組件
+const Badge: React.FC<{ text: string; color?: string; size?: 'sm' | 'md' }> = ({ 
+  text, 
+  color = 'default', 
+  size = 'sm' 
+}) => {
+  const getColorClasses = (color: string) => {
+    switch (color) {
+      case 'gray':
+      case 'default':
+        return 'bg-gray-100 text-gray-800'
+      case 'brown':
+        return 'bg-amber-100 text-amber-800'
+      case 'orange':
+        return 'bg-orange-100 text-orange-800'
+      case 'yellow':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'green':
+        return 'bg-green-100 text-green-800'
+      case 'blue':
+        return 'bg-blue-100 text-blue-800'
+      case 'purple':
+        return 'bg-purple-100 text-purple-800'
+      case 'pink':
+        return 'bg-pink-100 text-pink-800'
+      case 'red':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const sizeClasses = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1 text-sm'
+
+  return (
+    <span className={`inline-flex items-center rounded-full font-medium whitespace-nowrap ${getColorClasses(color)} ${sizeClasses}`}>
+      {text}
+    </span>
+  )
+}
+
+// 渲染表格單元格內容
+const renderCellContent = (parsedValue: { type: string, value: any, displayText: string }) => {
+  switch (parsedValue.type) {
+    case 'select':
+    case 'status':
+      return (
+        <Badge 
+          text={parsedValue.value.name} 
+          color={parsedValue.value.color}
+        />
+      )
+      
+    case 'multi_select':
+      if (!parsedValue.value || parsedValue.value.length === 0) {
+        return <span className="text-gray-400">-</span>
+      }
+      return (
+        <div className="flex flex-wrap gap-1">
+          {parsedValue.value.map((item: any, index: number) => (
+            <Badge 
+              key={index} 
+              text={item.name} 
+              color={item.color}
+            />
+          ))}
+        </div>
+      )
+      
+    default:
+      return (
+        <div className="max-w-xs truncate" title={parsedValue.displayText}>
+          {parsedValue.displayText}
+        </div>
+      )
   }
 }
 
@@ -154,32 +286,35 @@ const DataTable: React.FC<DataTableProps> = ({ data, className = '' }) => {
   console.log('Columns:', columns) // 調試用
 
   const renderCellValue = (item: any, columnName: string) => {
-    let value
+    let property
     
     // 如果有 properties 屬性，使用 Notion 格式
     if (item?.properties) {
-      value = item.properties[columnName]
-      return formatNotionPropertyValue(value)
+      property = item.properties[columnName]
+      const parsedValue = parseNotionPropertyValue(property)
+      return renderCellContent(parsedValue)
     }
     
     // 否則直接從物件取值
-    value = item[columnName]
+    const value = item[columnName]
     
     if (value === null || value === undefined) {
-      return '-'
+      return <span className="text-gray-400">-</span>
     }
     
     if (typeof value === 'object') {
       // 如果是物件但不是 Notion 格式，嘗試格式化
       if (Array.isArray(value)) {
-        return value.join(', ')
+        return <div className="max-w-xs truncate">{value.join(', ')}</div>
       }
       // 如果是複雜物件，截取 JSON 字串
       const jsonStr = JSON.stringify(value)
-      return jsonStr.length > 50 ? jsonStr.substring(0, 50) + '...' : jsonStr
+      const displayStr = jsonStr.length > 50 ? jsonStr.substring(0, 50) + '...' : jsonStr
+      return <div className="max-w-xs truncate" title={jsonStr}>{displayStr}</div>
     }
     
-    return String(value)
+    const displayValue = String(value)
+    return <div className="max-w-xs truncate" title={displayValue}>{displayValue}</div>
   }
 
   return (
@@ -221,12 +356,10 @@ const DataTable: React.FC<DataTableProps> = ({ data, className = '' }) => {
               {data.map((item, index) => (
                 <tr key={index} className="hover:bg-gray-50">
                   {columns.map((columnName) => {
-                    const cellValue = renderCellValue(item, columnName)
+                    const cellContent = renderCellValue(item, columnName)
                     return (
                       <td key={columnName} className="px-4 py-3 text-sm text-gray-900 border-b border-gray-100">
-                        <div className="max-w-xs truncate" title={cellValue}>
-                          {cellValue}
-                        </div>
+                        {cellContent}
                       </td>
                     )
                   })}
