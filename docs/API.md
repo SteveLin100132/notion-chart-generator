@@ -1,19 +1,31 @@
 # API 參考文件
 
-本文件詳細說明了 Notion ECharts 視覺化工具的所有 API 端點。
+本文件詳細說明了 Notion Chart Generator 的所有 API 端點。
 
 ## 🌐 基本資訊
 
-- **基礎 URL**: `http://localhost:3000`
+- **前端 URL**: `http://localhost:3000` (Next.js)
+- **後端 API URL**: `http://localhost:3001` (NestJS)
+- **API 前綴**: `/api`
 - **API 版本**: v2.0.0
 - **Content-Type**: `application/json`
 - **Notion API 版本**: `2022-06-28`
+
+## 🏗️ 架構概述
+
+本專案採用前後端分離架構：
+
+- **前端**: Next.js 14 + React 18 + TypeScript
+- **後端**: NestJS 10 + Express + TypeScript
+- **圖表引擎**: Apache ECharts 5.4.3
+- **狀態管理**: Zustand
+- **UI 框架**: TailwindCSS + Shadcn UI
 
 ---
 
 ## 📡 Notion API 代理端點
 
-所有 Notion API 請求都透過伺服器代理處理，以解決 CORS 問題並提供統一的錯誤處理。
+所有 Notion API 請求都透過 NestJS 後端代理處理，以解決 CORS 問題並提供統一的錯誤處理與資料驗證。
 
 ### 1. 獲取資料庫列表
 
@@ -32,7 +44,7 @@
 **請求範例**:
 
 ```bash
-curl -X POST http://localhost:3000/api/notion/databases \
+curl -X POST http://localhost:3001/api/notion/databases \
   -H "Content-Type: application/json" \
   -d '{
     "token": "secret_1234567890abcdef"
@@ -94,7 +106,7 @@ curl -X POST http://localhost:3000/api/notion/databases \
 **請求範例**:
 
 ```bash
-curl -X POST http://localhost:3000/api/notion/database-properties \
+curl -X POST http://localhost:3001/api/notion/database-properties \
   -H "Content-Type: application/json" \
   -d '{
     "token": "secret_1234567890abcdef",
@@ -145,14 +157,16 @@ curl -X POST http://localhost:3000/api/notion/database-properties \
 {
   "token": "secret_xxx",
   "databaseId": "database-uuid",
-  "filter": {} // 可選的過濾條件
+  "filter": {}, // 可選的過濾條件
+  "pageSize": 100, // 可選，預設 100，最大 100
+  "startCursor": "string" // 可選，用於分頁
 }
 ```
 
 **請求範例**:
 
 ```bash
-curl -X POST http://localhost:3000/api/notion/query \
+curl -X POST http://localhost:3001/api/notion/query \
   -H "Content-Type: application/json" \
   -d '{
     "token": "secret_1234567890abcdef",
@@ -162,7 +176,8 @@ curl -X POST http://localhost:3000/api/notion/query \
       "select": {
         "equals": "台北"
       }
-    }
+    },
+    "pageSize": 50
   }'
 ```
 
@@ -191,14 +206,16 @@ curl -X POST http://localhost:3000/api/notion/query \
       }
     }
   }
-]
+],
+"has_more": false,
+"next_cursor": null
 ```
 
 ---
 
 ## 💾 快照管理 API
 
-快照系統用於保存和分享圖表配置及資料。
+快照系統用於保存和分享圖表配置及資料，採用檔案系統儲存。
 
 ### 1. 保存快照
 
@@ -210,23 +227,46 @@ curl -X POST http://localhost:3000/api/notion/query \
 
 ```json
 {
-  "data": [...], // 圖表資料陣列
+  "data": [
+    {
+      "x": "string",
+      "y": "number",
+      "label": "string",
+      "aggregateFunction": "string", // 可選
+      "originalCount": "number", // 可選
+      "valueCount": "number" // 可選
+    }
+  ],
   "chartType": "bar|line|pie|scatter",
   "aggregateFunction": "SUM|AVG|MIN|MAX|COUNT",
-  "title": "圖表標題",
-  "isDemo": false
+  "title": "string",
+  "isDemo": false // 可選，預設 false
 }
 ```
 
 **請求範例**:
 
 ```bash
-curl -X POST http://localhost:3000/api/snapshots \
+curl -X POST http://localhost:3001/api/snapshots \
   -H "Content-Type: application/json" \
   -d '{
     "data": [
-      {"x": "產品A", "y": 15000, "label": "產品A"},
-      {"x": "產品B", "y": 12000, "label": "產品B"}
+      {
+        "x": "產品A",
+        "y": 15000,
+        "label": "產品A",
+        "aggregateFunction": "SUM",
+        "originalCount": 4,
+        "valueCount": 4
+      },
+      {
+        "x": "產品B",
+        "y": 12000,
+        "label": "產品B",
+        "aggregateFunction": "SUM",
+        "originalCount": 2,
+        "valueCount": 2
+      }
     ],
     "chartType": "bar",
     "aggregateFunction": "SUM",
@@ -254,7 +294,7 @@ curl -X POST http://localhost:3000/api/snapshots \
 **請求範例**:
 
 ```bash
-curl -X GET http://localhost:3000/api/snapshots/chart_1690000000000_abc123
+curl -X GET http://localhost:3001/api/snapshots/chart_1690000000000_abc123
 ```
 
 **成功回應** (200):
@@ -268,8 +308,8 @@ curl -X GET http://localhost:3000/api/snapshots/chart_1690000000000_abc123
       "y": 15000,
       "label": "產品A",
       "aggregateFunction": "SUM",
-      "originalCount": 5,
-      "valueCount": 5
+      "originalCount": 4,
+      "valueCount": 4
     }
   ],
   "chartType": "bar",
@@ -303,7 +343,7 @@ curl -X GET http://localhost:3000/api/snapshots/chart_1690000000000_abc123
 **請求範例**:
 
 ```bash
-curl -X DELETE "http://localhost:3000/api/snapshots/cleanup?days=7"
+curl -X DELETE "http://localhost:3001/api/snapshots/cleanup?days=7"
 ```
 
 **成功回應** (200):
@@ -350,6 +390,8 @@ curl -X DELETE "http://localhost:3000/api/snapshots/cleanup?days=7"
 }
 ```
 
+**注意**: 此端點目前在 NestJS 後端中尚未實現，可在未來版本中添加。
+
 ---
 
 ## 📊 資料處理功能
@@ -389,27 +431,33 @@ API 支援以下資料聚合函數：
 
 ### 標準錯誤格式
 
-所有 API 錯誤都使用統一的格式：
+所有 API 錯誤都使用 NestJS 標準的錯誤格式：
 
 ```json
 {
-  "error": "錯誤描述",
-  "code": "ERROR_CODE",
-  "details": "詳細錯誤資訊（可選）"
+  "statusCode": 400,
+  "message": "錯誤描述",
+  "error": "Bad Request"
 }
 ```
 
 ### 常見錯誤代碼
 
-| 代碼                 | HTTP 狀態 | 說明                     |
-| -------------------- | --------- | ------------------------ |
-| `INVALID_TOKEN`      | 400       | Token 格式無效           |
-| `UNAUTHORIZED`       | 401       | Token 無效或權限不足     |
-| `DATABASE_NOT_FOUND` | 404       | 資料庫不存在或無權限存取 |
-| `SNAPSHOT_NOT_FOUND` | 404       | 快照不存在               |
-| `INVALID_REQUEST`    | 400       | 請求格式錯誤             |
-| `INTERNAL_ERROR`     | 500       | 伺服器內部錯誤           |
-| `NOTION_API_ERROR`   | 502       | Notion API 錯誤          |
+| HTTP 狀態 | 錯誤類型              | 說明                   | 範例回應                                                                                         |
+| --------- | --------------------- | ---------------------- | ------------------------------------------------------------------------------------------------ |
+| 400       | BadRequestException   | 請求參數錯誤或格式無效 | `{"statusCode": 400, "message": "token should not be empty", "error": "Bad Request"}`            |
+| 401       | UnauthorizedException | Token 無效或權限不足   | `{"statusCode": 401, "message": "Unauthorized - Invalid Notion token", "error": "Unauthorized"}` |
+| 404       | NotFoundException     | 資源不存在             | `{"statusCode": 404, "message": "Snapshot not found", "error": "Not Found"}`                     |
+| 500       | InternalServerError   | 伺服器內部錯誤         | `{"statusCode": 500, "message": "Internal server error", "error": "Internal Server Error"}`      |
+
+### 輸入驗證
+
+NestJS 使用 `class-validator` 進行自動輸入驗證：
+
+- **NotionTokenDto**: 驗證 token 字段不能為空
+- **DatabasePropertiesDto**: 驗證 token 和 databaseId 字段
+- **QueryDatabaseDto**: 驗證必需字段和可選字段類型
+- **CreateSnapshotDto**: 驗證圖表資料結構
 
 ### 錯誤處理範例
 
@@ -427,15 +475,21 @@ try {
     const error = await response.json();
     console.error("API Error:", error);
 
-    switch (error.code) {
-      case "INVALID_TOKEN":
-        alert("請檢查您的 Notion Token 格式");
+    switch (error.statusCode) {
+      case 400:
+        alert("請求參數錯誤，請檢查輸入格式");
         break;
-      case "UNAUTHORIZED":
-        alert("Token 無效，請重新設定");
+      case 401:
+        alert("Token 無效，請重新設定 Notion Integration Token");
+        break;
+      case 404:
+        alert("找不到指定的資源");
+        break;
+      case 500:
+        alert("伺服器內部錯誤，請稍後再試");
         break;
       default:
-        alert(`錯誤: ${error.error}`);
+        alert(`錯誤: ${error.message}`);
     }
     return;
   }
@@ -460,33 +514,103 @@ try {
 2. **Postman**: GUI 介面
 3. **Insomnia**: 輕量級 API 客戶端
 4. **VS Code REST Client**: 編輯器插件
+5. **Thunder Client**: VS Code 擴展
 
 ### 環境設定
 
 在開發環境中，您可以設定以下環境變數：
 
+**前端 (.env.local)**:
+
 ```env
-PORT=3000
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+**後端 (.env)**:
+
+```env
+PORT=3001
 NODE_ENV=development
 NOTION_API_VERSION=2022-06-28
 SNAPSHOT_RETENTION_DAYS=7
-DEBUG=true
 ```
 
 ### API 速率限制
 
 - **Notion API**: 遵循 Notion 官方限制（約 3 請求/秒）
 - **快照 API**: 無特殊限制
-- **建議**: 在生產環境中實施適當的速率限制
+- **建議**: 在生產環境中使用 NestJS 的 Throttler 模組實施速率限制
+
+### 開發命令
+
+```bash
+# 安裝所有依賴
+npm run install:all
+
+# 啟動開發服務器 (前端 + 後端)
+npm run dev
+
+# 僅啟動前端
+npm run dev:frontend
+
+# 僅啟動後端
+npm run dev:backend
+
+# 建構專案
+npm run build
+
+# 啟動生產服務器
+npm run start
+```
 
 ---
 
 ## 📖 更多資源
 
 - [Notion API 官方文件](https://developers.notion.com/reference)
-- [ECharts 文件](https://echarts.apache.org/zh/index.html)
-- [Express.js 文件](https://expressjs.com/)
-- [專案 GitHub](https://github.com/your-repo/notion-echart)
+- [NestJS 文件](https://docs.nestjs.com/)
+- [Next.js 文件](https://nextjs.org/docs)
+- [Apache ECharts 文件](https://echarts.apache.org/zh/index.html)
+- [Zustand 文件](https://zustand-demo.pmnd.rs/)
+- [TailwindCSS 文件](https://tailwindcss.com/docs)
+- [Shadcn UI 文件](https://ui.shadcn.com/)
+
+## 🎯 API 使用建議
+
+### 最佳實踐
+
+1. **Token 安全**:
+
+   - 不要在前端代碼中硬編碼 Token
+   - 使用環境變數或安全的儲存方式
+
+2. **錯誤處理**:
+
+   - 總是檢查 HTTP 狀態碼
+   - 提供使用者友善的錯誤訊息
+   - 實作重試機制
+
+3. **效能優化**:
+
+   - 使用適當的 pageSize 避免單次查詢過多資料
+   - 實作前端快取以減少重複請求
+   - 使用 startCursor 進行分頁查詢
+
+4. **資料驗證**:
+   - 後端已實作自動驗證，前端也應進行基本檢查
+   - 確保數字類型的屬性用於 Y 軸
+   - 檢查必要欄位的存在
+
+### 常見問題解答
+
+**Q: 為什麼要使用 POST 方法傳送 Token？**
+A: 為了安全性考量，避免 Token 在 URL 中暴露，所有包含敏感資訊的請求都使用 POST 方法並在 Body 中傳送。
+
+**Q: 快照的保存期限是多久？**
+A: 預設為 7 天，可透過 cleanup API 的 days 參數調整，或在環境變數中設定 SNAPSHOT_RETENTION_DAYS。
+
+**Q: 支援哪些 Notion 屬性類型？**
+A: 目前支援 title、rich_text、number、select、multi_select、date、checkbox、url、email、phone_number 等類型。
 
 ---
 
