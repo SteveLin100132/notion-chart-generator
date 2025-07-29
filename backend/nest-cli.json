@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nestjs/nest-cli/master/lib/schemas/nest-cli.schema.json",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "compilerOptions": {
+    "deleteOutDir": true
+  }
+}

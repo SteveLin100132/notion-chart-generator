@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+  notion-chart-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:3000" # Frontend 對外端口
+      - "3001:3001" # Backend API
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - BACKEND_PORT=3001
+    restart: always
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - notion-chart-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "0.5"
+        reservations:
+          memory: 512M
+          cpus: "0.25"
+
+  # Nginx 反向代理（可選）
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      # - ./ssl:/etc/nginx/ssl:ro  # SSL 憑證
+    depends_on:
+      - notion-chart-app
+    restart: always
+    networks:
+      - notion-chart-network
+
+networks:
+  notion-chart-network:
+    driver: bridge
+# 可選：添加持久化儲存
+# volumes:
+#   notion_data:
+#     driver: local
