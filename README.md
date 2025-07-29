@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/images/notion-chart-generator-logo.png" />
+  <img src="assets/images/notion-chart-generator-logo.png" width="120" />
   <h1>Notion Chart Generator</h1>
   <div>
     <img src="https://img.shields.io/badge/version-2.0.0-blue.svg" />
