@@ -1,0 +1,23 @@
+# 前端依賴
+node_modules/
+.next/
+out/
+build/
+
+# 環境變數
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 日誌
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+
+# 其他
+.DS_Store
+Thumbs.db

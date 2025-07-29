@@ -1,0 +1,30 @@
+# 依賴
+node_modules/
+dist/
+build/
+
+# 環境變數
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 日誌
+*.log
+logs/
+
+# 測試覆蓋率
+coverage/
+
+# IDE
+.vscode/
+.idea/
+
+# 快照檔案
+snapshots/*.json
+!snapshots/.gitkeep
+
+# 其他
+.DS_Store
+Thumbs.db
