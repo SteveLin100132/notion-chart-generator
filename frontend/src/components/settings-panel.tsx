@@ -80,9 +80,20 @@ export const SettingsPanel: React.FC = () => {
     console.log('開始生成圖表...')
     console.log('設定:', { selectedDatabase, xAxisProperty, yAxisProperty, labelProperty, aggregateFunction })
     
-    if (!selectedDatabase || !xAxisProperty || !yAxisProperty) {
-      setError('請完成所有必要的設定')
+    if (!selectedDatabase || !xAxisProperty) {
+      setError('請選擇資料庫和 X 軸屬性')
       return
+    }
+
+    // 檢查是否需要使用 COUNT 模式
+    const hasNumericProperties = getCompatibleProperties(true).length > 0
+    const isCountMode = !yAxisProperty || !hasNumericProperties
+    const actualYAxisProperty = isCountMode ? '__count__' : yAxisProperty
+    const actualAggregateFunction = isCountMode ? 'COUNT' : aggregateFunction
+
+    // 如果是 COUNT 模式，確保聚合函數設為 COUNT
+    if (isCountMode) {
+      setAggregateFunction('COUNT')
     }
 
     setIsLoading(true)
@@ -133,9 +144,9 @@ export const SettingsPanel: React.FC = () => {
       const processedData = dataProcessor.processNotionData(
         allData,
         xAxisProperty,
-        yAxisProperty,
+        actualYAxisProperty,
         labelProperty === 'none' ? '' : labelProperty,
-        aggregateFunction
+        actualAggregateFunction
       )
 
       console.log('處理後的圖表資料:', processedData)
@@ -309,7 +320,7 @@ export const SettingsPanel: React.FC = () => {
                 </label>
                 <Select value={yAxisProperty} onValueChange={setYAxisProperty}>
                   <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                    <SelectValue placeholder="選擇 Y 軸屬性" />
+                    <SelectValue placeholder="選擇 Y 軸屬性（可選）" />
                   </SelectTrigger>
                   <SelectContent>
                     {getCompatibleProperties(true).filter(prop => prop.name && prop.name.trim()).map((prop) => (
@@ -319,6 +330,11 @@ export const SettingsPanel: React.FC = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {!yAxisProperty && getCompatibleProperties(true).length === 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    沒有可用的數字類型屬性，將使用計數模式
+                  </p>
+                )}
               </div>
 
               {/* 聚合函數 */}
@@ -326,18 +342,31 @@ export const SettingsPanel: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   聚合函數
                 </label>
-                <Select value={aggregateFunction} onValueChange={setAggregateFunction}>
-                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                <Select 
+                  value={(!yAxisProperty || getCompatibleProperties(true).length === 0) ? 'COUNT' : aggregateFunction} 
+                  onValueChange={setAggregateFunction}
+                  disabled={!yAxisProperty || getCompatibleProperties(true).length === 0}
+                >
+                  <SelectTrigger className={`bg-white border-gray-300 text-gray-900 ${(!yAxisProperty || getCompatibleProperties(true).length === 0) ? 'opacity-50' : ''}`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {aggregateFunctionOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
+                    {(!yAxisProperty || getCompatibleProperties(true).length === 0) ? (
+                      <SelectItem value="COUNT">COUNT (計數)</SelectItem>
+                    ) : (
+                      aggregateFunctionOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
+                {(!yAxisProperty || getCompatibleProperties(true).length === 0) && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    沒有 Y 軸屬性時僅支援計數聚合函數
+                  </p>
+                )}
               </div>
 
               {/* 標籤屬性 (可選) */}
@@ -363,7 +392,7 @@ export const SettingsPanel: React.FC = () => {
               {/* 生成圖表按鈕 */}
               <Button
                 onClick={handleGenerateChart}
-                disabled={isLoading || !selectedDatabase || !xAxisProperty || !yAxisProperty}
+                disabled={isLoading || !selectedDatabase || !xAxisProperty}
                 className="w-full bg-black hover:bg-gray-800 text-white"
               >
                 {isLoading ? (
@@ -393,7 +422,9 @@ export const SettingsPanel: React.FC = () => {
             使用提示
           </h4>
           <ul className="text-xs text-blue-700 space-y-1">
-            <li>• Y 軸僅支援數字類型屬性</li>
+            <li>• Y 軸支援數字類型屬性（number, formula, rollup）</li>
+            <li>• 沒有可用 Y 軸屬性時自動使用計數模式</li>
+            <li>• 計數模式會統計每個 X 軸值的出現次數</li>
             <li>• 相同 X 軸值會根據聚合函數合併</li>
             <li>• 標籤屬性可增強圖表可讀性</li>
           </ul>

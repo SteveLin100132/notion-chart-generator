@@ -95,22 +95,34 @@ export const dataProcessor = {
       { values: number[]; count: number }
     >();
 
+    // 檢查是否為 COUNT 模式
+    const isCountMode =
+      yAxisProperty === "__count__" || aggregateFunction === "COUNT";
+
     // 處理每一筆資料
     data.forEach((item) => {
       const properties = item.properties;
       let xValue = this.extractPropertyValue(properties[xAxisProperty]);
-      let yValue = this.extractPropertyValue(properties[yAxisProperty]);
+      let yValue: number;
+
+      if (isCountMode) {
+        // COUNT 模式：每個項目計數為 1
+        yValue = 1;
+      } else {
+        // 正常模式：從 Y 軸屬性提取值
+        yValue = this.extractPropertyValue(properties[yAxisProperty]);
+        // 確保 Y 軸是數字
+        if (typeof yValue === "string") {
+          yValue = parseFloat(yValue) || 0;
+        }
+        if (typeof yValue !== "number") {
+          yValue = 0;
+        }
+      }
+
       let labelValue = labelProperty
         ? this.extractPropertyValue(properties[labelProperty])
         : xValue;
-
-      // 確保 Y 軸是數字
-      if (typeof yValue === "string") {
-        yValue = parseFloat(yValue) || 0;
-      }
-      if (typeof yValue !== "number") {
-        yValue = 0;
-      }
 
       // 確保 X 軸是字串
       if (typeof xValue !== "string") {
