@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="assets/images/notion-chart-generator-logo.png" width="120" />
+  <img src="assets/images/notion-chart-generator-logo.png" width="100" />
   <h1>Notion Chart Generator</h1>
   <div>
-    <img src="https://img.shields.io/badge/version-2.0.0-blue.svg" />
+    <img src="https://img.shields.io/badge/version-1.0.0-blue.svg" />
     <img src="https://img.shields.io/badge/React-18+-61dafb.svg" />
     <img src="https://img.shields.io/badge/Next.js-14+-black.svg" />
     <img src="https://img.shields.io/badge/NestJS-10+-e0234e.svg" />
@@ -170,11 +170,3 @@ CORS_ORIGIN=http://localhost:3000
 - 確認選擇的屬性包含有效資料
 - 檢查 Y 軸 屬性是否為數字類型
 - 確認資料庫中有資料記錄
-
----
-
-**版本**: v1.0.0  
-**最後更新**: 2025-07-29  
-**開發者**: Steve CY Lin
-**授權條款**: MIT License  
-**技術支援**: [GitHub Issues](https://github.com/SteveLin100132/notion-chart-generator/issues)
