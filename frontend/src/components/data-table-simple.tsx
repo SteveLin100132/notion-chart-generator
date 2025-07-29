@@ -41,6 +41,9 @@ const formatNotionPropertyValue = (property: any): string => {
       return property.select?.name || '-'
     case 'multi_select':
       return property.multi_select?.map((s: any) => s.name).join(', ') || '-'
+    case 'status':
+      // 處理狀態欄位
+      return property.status?.name || '-'
     case 'date':
       return property.date?.start || '-'
     case 'checkbox':
@@ -52,11 +55,38 @@ const formatNotionPropertyValue = (property: any): string => {
     case 'phone_number':
       return property.phone_number || '-'
     case 'formula':
-      return formatNotionPropertyValue(property.formula) || '-'
+      // 處理公式欄位
+      if (property.formula) {
+        if (property.formula.type === 'string') {
+          return property.formula.string || '-'
+        } else if (property.formula.type === 'number') {
+          return property.formula.number?.toString() || '-'
+        } else if (property.formula.type === 'boolean') {
+          return property.formula.boolean ? '✓' : '✗'
+        } else if (property.formula.type === 'date') {
+          return property.formula.date?.start || '-'
+        } else {
+          // 遞歸處理其他類型的公式結果
+          return formatNotionPropertyValue(property.formula) || '-'
+        }
+      }
+      return '-'
     case 'relation':
       return `${property.relation?.length || 0} 個關聯`
     case 'rollup':
-      return formatNotionPropertyValue(property.rollup) || '-'
+      // 處理彙總欄位
+      if (property.rollup) {
+        if (property.rollup.type === 'number') {
+          return property.rollup.number?.toString() || '-'
+        } else if (property.rollup.type === 'array') {
+          return `${property.rollup.array?.length || 0} 個項目`
+        } else if (property.rollup.type === 'date') {
+          return property.rollup.date?.start || '-'
+        } else {
+          return formatNotionPropertyValue(property.rollup) || '-'
+        }
+      }
+      return '-'
     case 'people':
       return property.people?.map((p: any) => p.name).join(', ') || '-'
     case 'files':
@@ -67,8 +97,24 @@ const formatNotionPropertyValue = (property: any): string => {
     case 'created_by':
     case 'last_edited_by':
       return property[property.type]?.name || '-'
+    case 'unique_id':
+      return property.unique_id?.number?.toString() || property.unique_id?.prefix || '-'
     default:
-      return String(property) || '-'
+      // 對於未知類型，嘗試智能解析
+      console.log('Unknown property type:', property.type, property)
+      
+      // 檢查是否有常見的值屬性
+      if (property.value !== undefined) {
+        return String(property.value)
+      }
+      if (property.name !== undefined) {
+        return String(property.name)
+      }
+      if (property.text !== undefined) {
+        return String(property.text)
+      }
+      
+      return `[${property.type}]`
   }
 }
 
