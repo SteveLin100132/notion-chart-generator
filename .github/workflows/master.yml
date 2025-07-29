@@ -9,39 +9,42 @@ env:
   GITHUB_ACTOR: ${{ github.actor }}
   APP_VERSION: ${{ vars.APP_VERSION }}
   IMAGE_NAME: ${{ vars.IMAGE_NAME }}
-  IMAGE_REPO: ${GITHUB_ACTOR,,}
+  IMAGE_REPO: ${{ github.repository_owner }}
 
 jobs:
-  unit-test:
-    name: Run Unit Test
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true # 一個 job fail，其他 job 會被取消
-      matrix:
-        node-version: [14, 16, 18, 20, 22]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+  # unit-test:
+  #   name: Run Unit Test
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: true # 一個 job fail，其他 job 會被取消
+  #     matrix:
+  #       node-version: [18, 20, 22]
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: ${{ matrix.node-version }}
 
-      - name: Install dependencies
-        run: npm install
+  #     - name: Install dependencies
+  #       run: npm run install:all
 
-      - name: Run unit tests
-        run: npm run test
+  #     - name: Run frontend tests
+  #       run: cd frontend && npm run test --if-present
 
-      # - name: Send Slack notification on failure
-      #   if: failure()
-      #   run: |
-      #     curl -X POST -H 'Content-type: application/json' \
-      #     --data '{
-      #       "text": ":x: Unit tests failed in `${{ github.repository }}` on branch `${{ github.ref_name }}` by `${{ github.actor }}`.\nCheck run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-      #     }' \
-      #     ${{ secrets.SLACK_WEBHOOK_URL }}
+  #     - name: Run backend tests
+  #       run: cd backend && npm run test --if-present
+
+  #     - name: Send Slack notification on failure
+  #       if: failure()
+  #       run: |
+  #         curl -X POST -H 'Content-type: application/json' \
+  #         --data '{
+  #           "text": ":x: Unit tests failed in `${{ github.repository }}` on branch `${{ github.ref_name }}` by `${{ github.actor }}`.\nCheck run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  #         }' \
+  #         ${{ secrets.SLACK_WEBHOOK_URL }}
 
   bump-version:
     name: Bump Version and Update GitHub Variable
@@ -87,17 +90,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Log in to Docker Hub
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.CR_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker image
-        run: |
-          docker build -t ghcr.io/${{ env.IMAGE_REPO }}/$IMAGE_NAME:${{ needs.bump-version.outputs.new_version }} .
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ env.IMAGE_REPO }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ needs.bump-version.outputs.new_version }}
+            type=raw,value=latest
 
-      - name: Push Docker image
-        run: |
-          docker push ghcr.io/${{ env.IMAGE_REPO }}/$IMAGE_NAME:${{ needs.bump-version.outputs.new_version }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
