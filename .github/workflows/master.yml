@@ -1,0 +1,103 @@
+name: CI - master
+
+on:
+  push:
+    branches:
+      - "master"
+
+env:
+  GITHUB_ACTOR: ${{ github.actor }}
+  APP_VERSION: ${{ vars.APP_VERSION }}
+  IMAGE_NAME: ${{ vars.IMAGE_NAME }}
+  IMAGE_REPO: ${GITHUB_ACTOR,,}
+
+jobs:
+  unit-test:
+    name: Run Unit Test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true # 一個 job fail，其他 job 會被取消
+      matrix:
+        node-version: [14, 16, 18, 20, 22]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run unit tests
+        run: npm run test
+
+      # - name: Send Slack notification on failure
+      #   if: failure()
+      #   run: |
+      #     curl -X POST -H 'Content-type: application/json' \
+      #     --data '{
+      #       "text": ":x: Unit tests failed in `${{ github.repository }}` on branch `${{ github.ref_name }}` by `${{ github.actor }}`.\nCheck run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      #     }' \
+      #     ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  bump-version:
+    name: Bump Version and Update GitHub Variable
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+    # needs: unit-test # 等 unit-test 成功才執行
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Bump patch version
+        id: bump
+        uses: actions-ecosystem/action-bump-semver@v1
+        with:
+          current_version: ${{ env.APP_VERSION }}
+          level: patch
+
+      - name: Install GitHub CLI
+        run: sudo apt-get update && sudo apt-get install -y gh
+
+      - name: Update GitHub variable
+        run: |
+          gh api \
+            --method PATCH \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/actions/variables/APP_VERSION \
+            -f name='APP_VERSION' \
+            -f value="${{ steps.bump.outputs.new_version }}"
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+
+  build-image:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs:
+      # - unit-test # 等 unit-test 成功才執行
+      - bump-version # 等 bump-version 成功才執行
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.CR_PAT }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t ghcr.io/${{ env.IMAGE_REPO }}/$IMAGE_NAME:${{ needs.bump-version.outputs.new_version }} .
+
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/${{ env.IMAGE_REPO }}/$IMAGE_NAME:${{ needs.bump-version.outputs.new_version }}
