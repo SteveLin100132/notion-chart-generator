@@ -15,7 +15,12 @@ async function bootstrap() {
 
   // 啟用 CORS
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    origin: [
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'http://34-8-37-238.nip.io',
+      'https://34-8-37-238.nip.io',
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });

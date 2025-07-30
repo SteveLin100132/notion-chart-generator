@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notion-chart-generator-config
+data:
+  APP_VER: "1.0.0"
+  NODE_ENV: "production"
+  PORT: "3000"
+  BACKEND_PORT: "3001"

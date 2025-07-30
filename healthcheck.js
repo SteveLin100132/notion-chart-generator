@@ -33,7 +33,7 @@ const checkHealth = (port, path = '/') => {
 
 Promise.all([
   checkHealth(3000), // Frontend
-  checkHealth(3001, '/api/notion/databases') // Backend API
+  checkHealth(3001, '/api/health') // Backend Health Check
 ])
   .then(results => {
     console.log('Health check passed:', results);

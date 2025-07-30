@@ -1,0 +1,18 @@
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: notion-chart-generator-backendconfig
+  labels:
+    app: notion-chart-generator
+spec:
+  healthCheck:
+    checkIntervalSec: 15
+    timeoutSec: 5
+    healthyThreshold: 2
+    unhealthyThreshold: 5
+    type: HTTP
+    requestPath: /api/notion/databases
+    port: 3001
+  timeoutSec: 60
+  connectionDraining:
+    drainingTimeoutSec: 60

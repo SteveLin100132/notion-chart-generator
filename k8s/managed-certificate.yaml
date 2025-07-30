@@ -1,0 +1,9 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: notion-chart-generator-cert
+  labels:
+    app: notion-chart-generator
+spec:
+  domains:
+    - 34-8-37-238.nip.io
