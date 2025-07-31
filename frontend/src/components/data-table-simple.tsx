@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Database, Table } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
 
 interface DataTableProps {
   data: any[]
@@ -75,8 +76,12 @@ const parseNotionPropertyValue = (property: any): { type: string, value: any, di
       return { type: 'text', value: dateValue, displayText: dateValue }
       
     case 'checkbox':
-      const checkboxValue = property.checkbox ? '✓' : '✗'
-      return { type: 'text', value: checkboxValue, displayText: checkboxValue }
+      const checkboxValue = property.checkbox
+      return { 
+        type: 'checkbox', 
+        value: checkboxValue, 
+        displayText: checkboxValue ? '✓' : '✗' 
+      }
       
     case 'url':
       const urlValue = property.url || '-'
@@ -99,8 +104,12 @@ const parseNotionPropertyValue = (property: any): { type: string, value: any, di
           const formulaNumber = property.formula.number?.toString() || '-'
           return { type: 'text', value: formulaNumber, displayText: formulaNumber }
         } else if (property.formula.type === 'boolean') {
-          const formulaBool = property.formula.boolean ? '✓' : '✗'
-          return { type: 'text', value: formulaBool, displayText: formulaBool }
+          const formulaBool = property.formula.boolean
+          return { 
+            type: 'checkbox', 
+            value: formulaBool, 
+            displayText: formulaBool ? '✓' : '✗' 
+          }
         } else if (property.formula.type === 'date') {
           const formulaDate = property.formula.date?.start || '-'
           return { type: 'text', value: formulaDate, displayText: formulaDate }
@@ -241,9 +250,20 @@ const renderCellContent = (parsedValue: { type: string, value: any, displayText:
         </div>
       )
       
+    case 'checkbox':
+      return (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={parsedValue.value}
+            disabled
+            className="cursor-default"
+          />
+        </div>
+      )
+      
     default:
       return (
-        <div className="max-w-xs truncate" title={parsedValue.displayText}>
+        <div className="max-w-48 truncate whitespace-nowrap" title={parsedValue.displayText}>
           {parsedValue.displayText}
         </div>
       )
@@ -305,29 +325,29 @@ const DataTable: React.FC<DataTableProps> = ({ data, className = '' }) => {
     if (typeof value === 'object') {
       // 如果是物件但不是 Notion 格式，嘗試格式化
       if (Array.isArray(value)) {
-        return <div className="max-w-xs truncate">{value.join(', ')}</div>
+        return <div className="max-w-48 truncate whitespace-nowrap">{value.join(', ')}</div>
       }
       // 如果是複雜物件，截取 JSON 字串
       const jsonStr = JSON.stringify(value)
       const displayStr = jsonStr.length > 50 ? jsonStr.substring(0, 50) + '...' : jsonStr
-      return <div className="max-w-xs truncate" title={jsonStr}>{displayStr}</div>
+      return <div className="max-w-48 truncate whitespace-nowrap" title={jsonStr}>{displayStr}</div>
     }
     
     const displayValue = String(value)
-    return <div className="max-w-xs truncate" title={displayValue}>{displayValue}</div>
+    return <div className="max-w-48 truncate whitespace-nowrap" title={displayValue}>{displayValue}</div>
   }
 
   return (
     <div className={`bg-white rounded-lg border border-gray-200 ${className}`}>
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center space-x-2">
+      <div className="p-4 border-b border-gray-200 flex-shrink-0">
+        <div className="flex items-center space-x-2 whitespace-nowrap">
           <Table className="h-5 w-5 text-gray-600" />
           <h3 className="text-lg font-semibold text-gray-900">資料表格</h3>
           <span className="text-sm text-gray-500">({data.length} 筆資料)</span>
         </div>
       </div>
       
-      <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+      <div className="overflow-auto data-table-scroll" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         {data.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             <Database className="h-12 w-12 mx-auto mb-4 text-gray-300" />
@@ -342,31 +362,33 @@ const DataTable: React.FC<DataTableProps> = ({ data, className = '' }) => {
             </pre>
           </div>
         ) : (
-          <table className="w-full table-auto">
-            <thead className="bg-gray-50 sticky top-0">
-              <tr>
-                {columns.map((columnName) => (
-                  <th key={columnName} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                    {columnName}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {data.map((item, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  {columns.map((columnName) => {
-                    const cellContent = renderCellValue(item, columnName)
-                    return (
-                      <td key={columnName} className="px-4 py-3 text-sm text-gray-900 border-b border-gray-100">
-                        {cellContent}
-                      </td>
-                    )
-                  })}
+          <div className="overflow-x-auto data-table-scroll">
+            <table className="w-full min-w-max table-auto">
+              <thead className="bg-gray-50 sticky top-0">
+                <tr>
+                  {columns.map((columnName) => (
+                    <th key={columnName} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 min-w-32 whitespace-nowrap">
+                      {columnName}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {data.map((item, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    {columns.map((columnName) => {
+                      const cellContent = renderCellValue(item, columnName)
+                      return (
+                        <td key={columnName} className="px-4 py-3 text-sm text-gray-900 border-b border-gray-100 min-w-32 table-cell-nowrap">
+                          {cellContent}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

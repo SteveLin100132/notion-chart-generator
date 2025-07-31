@@ -73,3 +73,35 @@
   border: none !important;
   border-radius: 0 !important;
 }
+
+/* 表格橫向滾動樣式優化 */
+.data-table-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f9fafb;
+}
+
+.data-table-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.data-table-scroll::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 4px;
+}
+
+.data-table-scroll::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.data-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* 確保表格單元格不會意外換行 */
+.table-cell-nowrap {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

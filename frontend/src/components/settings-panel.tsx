@@ -186,7 +186,7 @@ export const SettingsPanel: React.FC = () => {
   }
 
   return (
-    <div className="w-80 bg-gray-50 border-r border-gray-200 p-6 overflow-y-auto">
+    <div className="w-80 min-w-80 max-w-80 bg-gray-50 border-r border-gray-200 p-6 overflow-y-auto flex-shrink-0">
       <div className="space-y-6">
         {/* Notion 連接 */}
         <div>

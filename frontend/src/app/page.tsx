@@ -53,7 +53,7 @@ export default function Home() {
       {!isEmbedMode && <SettingsPanel />}
 
       {/* 主要內容區域 */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* 頂部欄位 */}
         {!isEmbedMode && (
           <header className="border-b border-gray-200 p-4 flex items-center justify-between">
