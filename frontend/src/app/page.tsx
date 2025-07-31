@@ -152,7 +152,7 @@ function getChartTypeLabel(type: string): string {
     bar: '長條圖',
     line: '線圖',
     pie: '圓餅圖',
-    scatter: '散佈圖',
+    radar: '雷達圖',
   }
   return labels[type] || type
 }

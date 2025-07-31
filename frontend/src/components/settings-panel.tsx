@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useNotionStore } from '@/lib/store'
 import { notionApi, dataProcessor } from '@/lib/api'
-import { BarChart3, TrendingUp, PieChart, Loader2, Zap, Link, BarChart, Lightbulb } from 'lucide-react'
+import { BarChart3, TrendingUp, PieChart, Loader2, Target, Link, BarChart, Lightbulb } from 'lucide-react'
 import { NotionLogo } from '@/components/ui/notion-logo'
 
 export const SettingsPanel: React.FC = () => {
@@ -165,7 +165,7 @@ export const SettingsPanel: React.FC = () => {
     { value: 'bar', label: '長條圖', icon: 'BarChart3' },
     { value: 'line', label: '線圖', icon: 'TrendingUp' },
     { value: 'pie', label: '圓餅圖', icon: 'PieChart' },
-    { value: 'scatter', label: '散佈圖', icon: 'Zap' },
+    { value: 'radar', label: '雷達圖', icon: 'Target' },
   ]
 
   const aggregateFunctionOptions = [
@@ -268,8 +268,8 @@ export const SettingsPanel: React.FC = () => {
                           return <TrendingUp className="h-5 w-5 mb-1" />
                         case 'PieChart':
                           return <PieChart className="h-5 w-5 mb-1" />
-                        case 'Zap':
-                          return <Zap className="h-5 w-5 mb-1" />
+                        case 'Target':
+                          return <Target className="h-5 w-5 mb-1" />
                         default:
                           return null
                       }

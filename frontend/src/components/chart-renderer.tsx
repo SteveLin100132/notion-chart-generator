@@ -269,29 +269,44 @@ function getChartOption(data: ChartData[], chartType: ChartType, title: string) 
         ],
       }
 
-    case 'scatter':
+    case 'radar':
+      // 計算合適的最大值
+      const maxValue = Math.max(...data.map(d => d.y))
+      const suggestedMax = maxValue > 0 ? Math.ceil(maxValue * 1.2) : 100
+      
       return {
         ...baseOption,
-        xAxis: {
-          type: 'value' as const,
-          axisLabel: {
-            color: '#595959',
+        tooltip: {
+          trigger: 'item' as const,
+          formatter: function(params: any) {
+            if (params.seriesType === 'radar') {
+              const data = params.data
+              let tooltipText = `${data.name}<br/>`
+              data.value.forEach((val: number, index: number) => {
+                const indicator = params.radar.indicator[index]
+                tooltipText += `${indicator.name}: ${val}<br/>`
+              })
+              return tooltipText
+            }
+            return params.name + ': ' + params.value
           },
-          axisLine: {
-            lineStyle: {
-              color: '#d0d0d0',
-            },
-          },
-          splitLine: {
-            lineStyle: {
-              color: '#e8e8e8',
-            },
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderColor: '#d0d0d0',
+          borderWidth: 1,
+          textStyle: {
+            color: '#2c2c2c',
           },
         },
-        yAxis: {
-          type: 'value' as const,
-          axisLabel: {
+        radar: {
+          indicator: data.map(item => ({
+            name: item.label,
+            max: suggestedMax,
+          })),
+          center: ['50%', '60%'],
+          radius: '70%',
+          axisName: {
             color: '#595959',
+            fontSize: 12,
           },
           axisLine: {
             lineStyle: {
@@ -301,24 +316,45 @@ function getChartOption(data: ChartData[], chartType: ChartType, title: string) 
           splitLine: {
             lineStyle: {
               color: '#e8e8e8',
+            },
+          },
+          splitArea: {
+            areaStyle: {
+              color: ['rgba(0, 0, 0, 0.02)', 'rgba(0, 0, 0, 0.05)'],
             },
           },
         },
         series: [
           {
-            type: 'scatter' as const,
-            data: data.map(item => [item.x, item.y]),
-            symbolSize: 20,
-            itemStyle: {
-              color: '#000000',
-              opacity: 0.8,
-            },
-            emphasis: {
-              itemStyle: {
-                color: '#2c2c2c',
-                opacity: 1,
+            type: 'radar' as const,
+            data: [
+              {
+                value: data.map(item => item.y),
+                name: title,
+                areaStyle: {
+                  color: 'rgba(0, 0, 0, 0.2)',
+                },
+                lineStyle: {
+                  color: '#000000',
+                  width: 2,
+                },
+                itemStyle: {
+                  color: '#000000',
+                },
+                emphasis: {
+                  areaStyle: {
+                    color: 'rgba(0, 0, 0, 0.3)',
+                  },
+                  lineStyle: {
+                    color: '#2c2c2c',
+                    width: 3,
+                  },
+                  itemStyle: {
+                    color: '#2c2c2c',
+                  },
+                },
               },
-            },
+            ],
           },
         ],
       }
