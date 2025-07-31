@@ -9,7 +9,7 @@ metadata:
     networking.gke.io/managed-certificates: notion-chart-generator-cert
 spec:
   rules:
-    - host: 34-49-238-218.nip.io
+    - host: 34-13-115-184.nip.io
       http:
         paths:
           - path: /api
