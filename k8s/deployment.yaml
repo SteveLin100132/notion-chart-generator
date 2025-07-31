@@ -16,6 +16,10 @@ spec:
         app: notion-chart-generator
     spec:
       automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+        runAsGroup: 65533
       containers:
         - name: notion-chart-generator
           image: ghcr.io/stevelin100132/notion-chart-generator # Use the image from the kustomization.yaml
@@ -61,7 +65,7 @@ spec:
             failureThreshold: 3
           volumeMounts:
             - name: snapshots-storage
-              mountPath: /app/snapshots
+              mountPath: /app/backend/snapshots
       volumes:
         - name: snapshots-storage
           persistentVolumeClaim:
