@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useNotionStore } from '@/lib/store'
-import { notionApi, dataProcessor } from '@/lib/api'
+import { notionApi, dataProcessor, snapshotApi } from '@/lib/api'
 import { BarChart3, TrendingUp, PieChart, Loader2, Target, Link, BarChart, Lightbulb } from 'lucide-react'
 import { NotionLogo } from '@/components/ui/notion-logo'
 
@@ -38,6 +38,12 @@ export const SettingsPanel: React.FC = () => {
     setIsLoading,
     error,
     setError,
+    snapshotMode,
+    setSnapshotMode,
+    cacheExpireMinutes,
+    setCacheExpireMinutes,
+    currentSnapshotId,
+    setCurrentSnapshotId,
   } = useNotionStore()
 
   const [isLoadingDatabases, setIsLoadingDatabases] = useState(false)
@@ -78,7 +84,7 @@ export const SettingsPanel: React.FC = () => {
 
   const handleGenerateChart = async () => {
     console.log('開始生成圖表...')
-    console.log('設定:', { selectedDatabase, xAxisProperty, yAxisProperty, labelProperty, aggregateFunction })
+    console.log('設定:', { selectedDatabase, xAxisProperty, yAxisProperty, labelProperty, aggregateFunction, snapshotMode })
     
     if (!selectedDatabase || !xAxisProperty) {
       setError('請選擇資料庫和 X 軸屬性')
@@ -105,59 +111,105 @@ export const SettingsPanel: React.FC = () => {
     setNextCursor(null)
 
     try {
-      console.log('正在查詢資料庫資料...')
-      // 查詢資料庫資料 - 獲取所有資料用於圖表生成
-      const response = await notionApi.queryDatabase(token, selectedDatabase, undefined, 100)
-      console.log('API 回應:', response)
-      
-      let allData = response.results || response // 相容新舊格式
-      let hasMore = response.has_more
-      let nextCursor = response.next_cursor
-
-      console.log('初始資料數量:', allData.length)
-      console.log('是否有更多資料:', hasMore)
-
-      // 如果有更多資料，繼續獲取
-      while (hasMore && nextCursor) {
-        console.log('載入更多資料，游標:', nextCursor)
-        const nextResponse = await notionApi.queryDatabase(token, selectedDatabase, undefined, 100, nextCursor)
-        allData = [...allData, ...nextResponse.results]
-        hasMore = nextResponse.has_more
-        nextCursor = nextResponse.next_cursor
-        console.log('累積資料數量:', allData.length)
+      if (snapshotMode === 'static') {
+        // 靜態模式：直接查詢資料並處理
+        await generateStaticChart(actualYAxisProperty, actualAggregateFunction)
+      } else {
+        // 動態或快取模式：使用新的快照 API
+        await generateDynamicChart(actualYAxisProperty, actualAggregateFunction)
       }
-      
-      if (allData.length === 0) {
-        setError('資料庫中沒有資料')
-        setIsLoading(false)
-        return
-      }
-
-      console.log('最終資料數量:', allData.length)
-      console.log('資料範例:', allData[0])
-
-      // 存儲原始資料
-      setRawDatabaseData(allData)
-
-      console.log('開始處理資料...')
-      // 處理資料
-      const processedData = dataProcessor.processNotionData(
-        allData,
-        xAxisProperty,
-        actualYAxisProperty,
-        labelProperty === 'none' ? '' : labelProperty,
-        actualAggregateFunction
-      )
-
-      console.log('處理後的圖表資料:', processedData)
-      setChartData(processedData)
-      console.log('圖表生成成功！')
     } catch (err: any) {
       console.error('生成圖表錯誤:', err)
       console.error('錯誤詳情:', err.response?.data)
       setError(err.response?.data?.message || err.message || '生成圖表失敗')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const generateStaticChart = async (actualYAxisProperty: string, actualAggregateFunction: string) => {
+    console.log('正在查詢資料庫資料（靜態模式）...')
+    // 查詢資料庫資料 - 獲取所有資料用於圖表生成
+    const response = await notionApi.queryDatabase(token, selectedDatabase, undefined, 100)
+    console.log('API 回應:', response)
+    
+    let allData = response.results || response // 相容新舊格式
+    let hasMore = response.has_more
+    let nextCursor = response.next_cursor
+
+    console.log('初始資料數量:', allData.length)
+    console.log('是否有更多資料:', hasMore)
+
+    // 如果有更多資料，繼續獲取
+    while (hasMore && nextCursor) {
+      console.log('載入更多資料，游標:', nextCursor)
+      const nextResponse = await notionApi.queryDatabase(token, selectedDatabase, undefined, 100, nextCursor)
+      allData = [...allData, ...nextResponse.results]
+      hasMore = nextResponse.has_more
+      nextCursor = nextResponse.next_cursor
+      console.log('累積資料數量:', allData.length)
+    }
+    
+    if (allData.length === 0) {
+      setError('資料庫中沒有資料')
+      return
+    }
+
+    console.log('最終資料數量:', allData.length)
+    console.log('資料範例:', allData[0])
+
+    // 存儲原始資料
+    setRawDatabaseData(allData)
+
+    console.log('開始處理資料...')
+    // 處理資料
+    const processedData = dataProcessor.processNotionData(
+      allData,
+      xAxisProperty,
+      actualYAxisProperty,
+      labelProperty === 'none' ? '' : labelProperty,
+      actualAggregateFunction
+    )
+
+    console.log('處理後的圖表資料:', processedData)
+    setChartData(processedData)
+    console.log('圖表生成成功（靜態模式）！')
+  }
+
+  const generateDynamicChart = async (actualYAxisProperty: string, actualAggregateFunction: string) => {
+    console.log('正在建立動態快照...')
+    
+    try {
+      // 建立動態快照
+      const snapshotResponse = await snapshotApi.saveQuerySnapshot({
+        databaseId: selectedDatabase,
+        notionToken: token,
+        xProperty: xAxisProperty,
+        yProperty: actualYAxisProperty,
+        chartType,
+        aggregateFunction: actualAggregateFunction,
+        title: `動態圖表 - ${new Date().toLocaleString()}`,
+        snapshotMode,
+        cacheExpireMinutes: snapshotMode === 'cached' ? cacheExpireMinutes : undefined,
+        isDemo: false,
+      })
+
+      console.log('動態快照建立成功:', snapshotResponse)
+      
+      // 執行動態查詢以取得資料
+      const chartData = await snapshotApi.executeQuerySnapshot(snapshotResponse.id)
+      console.log('動態查詢執行成功:', chartData)
+      
+      // 更新狀態
+      setChartData(chartData.data)
+      setCurrentSnapshotId(snapshotResponse.id)
+      console.log('圖表生成成功（動態模式）！')
+      
+    } catch (error) {
+      console.error('動態快照建立失敗:', error)
+      // 如果動態快照失敗，回退到靜態模式
+      console.log('回退到靜態模式...')
+      await generateStaticChart(actualYAxisProperty, actualAggregateFunction)
     }
   }
 
@@ -388,6 +440,49 @@ export const SettingsPanel: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* 快照模式設定 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  快照模式
+                </label>
+                <Select value={snapshotMode} onValueChange={setSnapshotMode}>
+                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="static">靜態快照 - 儲存當前資料</SelectItem>
+                    <SelectItem value="dynamic">動態快照 - 即時查詢資料</SelectItem>
+                    <SelectItem value="cached">快取快照 - 定時更新資料</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {snapshotMode === 'static' && '資料將保存為靜態檔案，不會自動更新'}
+                  {snapshotMode === 'dynamic' && '每次查看都會從 Notion 取得最新資料'}
+                  {snapshotMode === 'cached' && '資料會定時從 Notion 更新，提供效能與即時性的平衡'}
+                </p>
+              </div>
+
+              {/* 快取過期時間 (僅在快取模式下顯示) */}
+              {snapshotMode === 'cached' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    快取過期時間 (分鐘)
+                  </label>
+                  <Input
+                    type="number"
+                    value={cacheExpireMinutes}
+                    onChange={(e) => setCacheExpireMinutes(parseInt(e.target.value) || 60)}
+                    min="1"
+                    max="1440"
+                    className="bg-white border-gray-300 text-gray-900"
+                    placeholder="60"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    資料快取的有效時間，超過後會重新從 Notion 取得
+                  </p>
+                </div>
+              )}
 
               {/* 生成圖表按鈕 */}
               <Button

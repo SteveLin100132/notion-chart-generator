@@ -13,7 +13,7 @@ import { NotionChartLogo } from '@/components/ui/notion-chart-logo'
 import { BarChart } from 'lucide-react'
 
 export default function Home() {
-  const { chartData, chartType, rawDatabaseData, setChartData, setChartType, setAggregateFunction } = useNotionStore()
+  const { chartData, chartType, rawDatabaseData, setChartData, setChartType, setAggregateFunction, setCurrentSnapshotId } = useNotionStore()
   const [isEmbedMode, setIsEmbedMode] = React.useState(false)
   const [currentView, setCurrentView] = React.useState<'chart' | 'data'>('chart')
   const chartRef = React.useRef<ChartRendererRef>(null)
@@ -29,23 +29,40 @@ export default function Home() {
     }
   }, [setChartData, setChartType, setAggregateFunction])
 
+  const loadQuerySnapshot = React.useCallback(async (queryId: string) => {
+    try {
+      console.log('載入動態快照:', queryId)
+      const snapshot = await snapshotApi.executeQuerySnapshot(queryId)
+      setChartData(snapshot.data)
+      setChartType(snapshot.chartType as any)
+      setAggregateFunction(snapshot.aggregateFunction as any)
+      setCurrentSnapshotId(queryId)
+      console.log('動態快照載入成功:', snapshot)
+    } catch (error) {
+      console.error('載入動態快照失敗:', error)
+    }
+  }, [setChartData, setChartType, setAggregateFunction, setCurrentSnapshotId])
+
   // 檢查是否有分享連結參數
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const snapshotId = urlParams.get('snapshot')
+    const queryId = urlParams.get('query')
     const embedMode = urlParams.get('embed') === 'true'
     
     setIsEmbedMode(embedMode)
 
     if (snapshotId) {
       loadSnapshot(snapshotId)
+    } else if (queryId) {
+      loadQuerySnapshot(queryId)
     }
 
     // 如果是嵌入模式，隱藏一些 UI 元素
     if (embedMode) {
       document.body.classList.add('embed-mode')
     }
-  }, [loadSnapshot])
+  }, [loadSnapshot, loadQuerySnapshot])
 
   return (
     <div className="flex h-screen bg-white text-gray-900">

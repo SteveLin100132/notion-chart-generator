@@ -24,6 +24,7 @@ export interface ChartData {
 
 export type ChartType = "bar" | "line" | "pie" | "radar";
 export type AggregateFunction = "SUM" | "AVG" | "MIN" | "MAX" | "COUNT";
+export type SnapshotMode = "static" | "dynamic" | "cached";
 
 interface NotionState {
   // Notion 連接
@@ -79,6 +80,14 @@ interface NotionState {
   // 分享
   shareUrl: string | null;
   setShareUrl: (url: string | null) => void;
+
+  // 動態快照設定
+  snapshotMode: SnapshotMode;
+  setSnapshotMode: (mode: SnapshotMode) => void;
+  cacheExpireMinutes: number;
+  setCacheExpireMinutes: (minutes: number) => void;
+  currentSnapshotId: string | null;
+  setCurrentSnapshotId: (id: string | null) => void;
 }
 
 export const useNotionStore = create<NotionState>((set) => ({
@@ -135,4 +144,12 @@ export const useNotionStore = create<NotionState>((set) => ({
   // 分享
   shareUrl: null,
   setShareUrl: (shareUrl) => set({ shareUrl }),
+
+  // 動態快照設定
+  snapshotMode: "dynamic",
+  setSnapshotMode: (snapshotMode) => set({ snapshotMode }),
+  cacheExpireMinutes: 60,
+  setCacheExpireMinutes: (cacheExpireMinutes) => set({ cacheExpireMinutes }),
+  currentSnapshotId: null,
+  setCurrentSnapshotId: (currentSnapshotId) => set({ currentSnapshotId }),
 }));

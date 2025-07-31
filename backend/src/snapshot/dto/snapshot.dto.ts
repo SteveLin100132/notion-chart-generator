@@ -43,6 +43,80 @@ export class ChartDataDto {
 }
 
 /**
+ * 查詢參數快照資料傳輸物件
+ *
+ * 用於建立基於查詢參數的動態快照
+ * 儲存查詢條件而非靜態資料，確保資料即時性
+ */
+export class CreateQuerySnapshotDto {
+  /** Notion 資料庫 ID */
+  @IsString()
+  @IsNotEmpty()
+  databaseId: string;
+
+  /** Notion API Token (加密儲存) */
+  @IsString()
+  @IsNotEmpty()
+  notionToken: string;
+
+  /** X 軸屬性 ID */
+  @IsString()
+  @IsNotEmpty()
+  xProperty: string;
+
+  /** Y 軸屬性 ID */
+  @IsString()
+  @IsNotEmpty()
+  yProperty: string;
+
+  /**
+   * 圖表類型
+   * 如: bar(長條圖), line(折線圖), pie(圓餅圖), radar(雷達圖) 等
+   */
+  @IsString()
+  @IsNotEmpty()
+  chartType: string;
+
+  /**
+   * 聚合函數
+   * 資料聚合的方式，如: sum(總和), avg(平均), count(計數) 等
+   */
+  @IsString()
+  @IsNotEmpty()
+  aggregateFunction: string;
+
+  /** 圖表標題 */
+  @IsString()
+  @IsNotEmpty()
+  title: string;
+
+  /**
+   * 快照模式
+   * static: 靜態快照 (現有方式)
+   * dynamic: 動態快照 (即時查詢)
+   * cached: 快取快照 (定時更新)
+   */
+  @IsOptional()
+  @IsString()
+  snapshotMode?: 'static' | 'dynamic' | 'cached';
+
+  /**
+   * 快取過期時間（分鐘）
+   * 僅在 cached 模式下有效
+   */
+  @IsOptional()
+  cacheExpireMinutes?: number;
+
+  /**
+   * 是否為示範資料 (可選)
+   * 用於標記測試或範例資料，預設為 false
+   */
+  @IsOptional()
+  @IsBoolean()
+  isDemo?: boolean;
+}
+
+/**
  * 建立快照資料傳輸物件
  *
  * 用於建立新圖表快照時的資料驗證和傳輸

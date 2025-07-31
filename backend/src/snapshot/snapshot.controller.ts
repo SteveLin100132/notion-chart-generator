@@ -8,7 +8,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { SnapshotService } from './snapshot.service';
-import { CreateSnapshotDto } from './dto/snapshot.dto';
+import { CreateSnapshotDto, CreateQuerySnapshotDto } from './dto/snapshot.dto';
 
 /**
  * 快照控制器
@@ -86,5 +86,69 @@ export class SnapshotController {
   async cleanupSnapshots(@Query('days') days?: string) {
     const retentionDays = days ? parseInt(days, 10) : 7;
     return this.snapshotService.cleanupSnapshots(retentionDays);
+  }
+
+  /**
+   * 建立動態查詢快照
+   *
+   * @route POST /snapshots/query
+   * @param dto - 建立動態快照所需的資料傳輸物件
+   * @returns 包含快照 ID 和建立結果的回應物件
+   *
+   * @example
+   * POST /snapshots/query
+   * Body: {
+   *   "databaseId": "abc123...",
+   *   "notionToken": "secret_...",
+   *   "xProperty": "name",
+   *   "yProperty": "value",
+   *   "chartType": "bar",
+   *   "aggregateFunction": "sum",
+   *   "title": "動態銷售統計圖",
+   *   "snapshotMode": "dynamic",
+   *   "cacheExpireMinutes": 60
+   * }
+   */
+  @Post('query')
+  async createQuerySnapshot(@Body() dto: CreateQuerySnapshotDto) {
+    return this.snapshotService.createQuerySnapshot(dto);
+  }
+
+  /**
+   * 根據 ID 取得動態快照的資料
+   * 會根據快照模式決定是否即時查詢 Notion API
+   *
+   * @route GET /snapshots/query/:id
+   * @param id - 動態快照的唯一識別碼
+   * @returns 圖表資料（可能是即時查詢結果或快取資料）
+   * @throws NotFoundException - 當指定的快照不存在時
+   *
+   * @example
+   * GET /snapshots/query/query_1753782323871_766ab85a
+   */
+  @Get('query/:id')
+  async executeQuerySnapshot(@Param('id') id: string) {
+    return this.snapshotService.executeQuerySnapshot(id);
+  }
+
+  /**
+   * 根據 ID 取得動態快照的設定
+   * 只返回快照的設定資訊，不執行查詢
+   *
+   * @route GET /snapshots/query/:id/config
+   * @param id - 動態快照的唯一識別碼
+   * @returns 動態快照的設定資訊（不包含敏感資料）
+   * @throws NotFoundException - 當指定的快照不存在時
+   *
+   * @example
+   * GET /snapshots/query/query_1753782323871_766ab85a/config
+   */
+  @Get('query/:id/config')
+  async getQuerySnapshotConfig(@Param('id') id: string) {
+    const querySnapshot = await this.snapshotService.getQuerySnapshot(id);
+
+    // 移除敏感資料後返回設定
+    const { encryptedToken, ...config } = querySnapshot;
+    return config;
   }
 }

@@ -77,6 +77,63 @@ export const snapshotApi = {
     const response = await api.get(`/snapshots/${id}`);
     return response.data;
   },
+
+  // 保存動態查詢快照
+  async saveQuerySnapshot(data: {
+    databaseId: string;
+    notionToken: string;
+    xProperty: string;
+    yProperty: string;
+    chartType: string;
+    aggregateFunction: string;
+    title: string;
+    snapshotMode?: "static" | "dynamic" | "cached";
+    cacheExpireMinutes?: number;
+    isDemo?: boolean;
+  }): Promise<{
+    id: string;
+    message: string;
+    timestamp: number;
+    snapshotMode: string;
+  }> {
+    const response = await api.post("/snapshots/query", data);
+    return response.data;
+  },
+
+  // 執行動態查詢快照（獲取即時資料）
+  async executeQuerySnapshot(id: string): Promise<{
+    id: string;
+    data: ChartData[];
+    chartType: string;
+    aggregateFunction: string;
+    title: string;
+    isDemo: boolean;
+    timestamp: number;
+    createdAt: string;
+  }> {
+    const response = await api.get(`/snapshots/query/${id}`);
+    return response.data;
+  },
+
+  // 獲取動態查詢快照設定
+  async getQuerySnapshotConfig(id: string): Promise<{
+    id: string;
+    databaseId: string;
+    xProperty: string;
+    yProperty: string;
+    chartType: string;
+    aggregateFunction: string;
+    title: string;
+    snapshotMode: "static" | "dynamic" | "cached";
+    cacheExpireMinutes?: number;
+    isDemo: boolean;
+    timestamp: number;
+    createdAt: string;
+    lastUpdated?: string;
+  }> {
+    const response = await api.get(`/snapshots/query/${id}/config`);
+    return response.data;
+  },
 };
 
 // 資料處理工具

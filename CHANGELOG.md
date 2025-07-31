@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **動態快照功能** - 全新的即時資料同步解決方案
+  - 新增動態快照模式，解決 Notion 資料庫更新後圖表內容不同步的問題
+  - 三種快照模式支援：靜態 (static)、動態 (dynamic)、快取 (cached)
+  - 動態快照 API 端點：
+    - `POST /api/snapshots/query` - 創建動態快照
+    - `GET /api/snapshots/query/:id` - 執行動態快照查詢（獲取即時資料）
+    - `GET /api/snapshots/query/:id/config` - 獲取動態快照配置
+  - API Token 安全加密儲存 (AES-256-CBC)
+  - 支援大型資料庫的分頁查詢
+  - 完整的錯誤處理和回退機制
+
+### Enhanced
+
+- **分享功能升級**
+
+  - 智能分享：自動判斷創建動態快照或靜態快照
+  - 支援動態快照分享連結格式：`?query=query_xxxxx&embed=true`
+  - 分享連結自動使用最新的 Notion 資料
+  - 回退機制：動態快照失敗時自動切換到靜態模式
+
+- **頁面載入支援**
+  - 支援靜態快照載入：`?snapshot=chart_xxxxx`
+  - 支援動態快照載入：`?query=query_xxxxx`
+  - 動態快照自動執行最新的 Notion 查詢
+
+### Improved
+
+- **Notion 資料處理**
+
+  - 改善資料聚合功能 (SUM, AVG, MIN, MAX, COUNT)
+  - 增強屬性值提取邏輯
+  - 支援更多 Notion 屬性類型 (formula, rollup 等)
+  - 優化大量資料處理效能
+
+- **TypeScript 錯誤修復**
+  - 修復雷達圖 tooltip 的 TypeScript 安全性問題
+  - 使用防禦性程式設計確保圖表渲染穩定性
+
+### Technical
+
+- **後端架構優化**
+
+  - NestJS 模組依賴注入配置完善
+  - SnapshotService 支援 NotionService 整合
+  - 加密服務使用現代 crypto API (createCipheriv/createDecipheriv)
+  - 移除已棄用的 crypto 函數
+
+- **前端狀態管理**
+  - 新增動態快照相關狀態管理
+  - 優化分享 URL 處理邏輯
+  - 改善使用者體驗流程
+
 ## [1.0.8] - 2025-07-31
 
 ### Added

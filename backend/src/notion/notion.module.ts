@@ -18,5 +18,7 @@ import { NotionService } from './notion.service';
   controllers: [NotionController],
   /** 註冊服務提供者 - 處理 Notion API 整合的商業邏輯 */
   providers: [NotionService],
+  /** 導出服務供其他模組使用 */
+  exports: [NotionService],
 })
 export class NotionModule {}
