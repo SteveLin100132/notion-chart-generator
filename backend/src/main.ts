@@ -13,16 +13,12 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // 啟用 CORS
+  // 啟用 CORS - 允許所有來源
   app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      'http://34-8-37-238.nip.io',
-      'https://34-8-37-238.nip.io',
-    ],
+    origin: true, // 允許所有來源
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true, // 允許攜帶認證信息
   });
 
   // 全局驗證管道
