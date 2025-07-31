@@ -7,8 +7,6 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: "gce"
     networking.gke.io/managed-certificates: notion-chart-generator-cert
-    # 添加健康檢查配置
-    cloud.google.com/backend-config: '{"ports": {"3001":"notion-chart-generator-backendconfig"}}'
 spec:
   rules:
     - host: 34-49-238-218.nip.io

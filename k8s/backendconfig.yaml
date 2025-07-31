@@ -7,9 +7,9 @@ metadata:
 spec:
   healthCheck:
     checkIntervalSec: 15
-    timeoutSec: 5
+    timeoutSec: 10
     healthyThreshold: 2
-    unhealthyThreshold: 5
+    unhealthyThreshold: 3
     type: HTTP
     requestPath: /api/health
     port: 3001

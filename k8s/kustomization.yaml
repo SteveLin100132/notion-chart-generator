@@ -11,4 +11,4 @@ resources:
 
 images:
   - name: ghcr.io/stevelin100132/notion-chart-generator
-    newTag: 1.0.3
+    newTag: 1.0.4
