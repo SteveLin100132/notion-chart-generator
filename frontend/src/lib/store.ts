@@ -22,7 +22,7 @@ export interface ChartData {
   valueCount?: number;
 }
 
-export type ChartType = "bar" | "line" | "pie" | "scatter";
+export type ChartType = "bar" | "line" | "pie" | "radar";
 export type AggregateFunction = "SUM" | "AVG" | "MIN" | "MAX" | "COUNT";
 
 interface NotionState {

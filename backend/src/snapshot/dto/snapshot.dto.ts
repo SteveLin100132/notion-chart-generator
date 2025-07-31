@@ -58,7 +58,7 @@ export class CreateSnapshotDto {
 
   /**
    * 圖表類型
-   * 如: bar(長條圖), line(折線圖), pie(圓餅圖), scatter(散佈圖) 等
+   * 如: bar(長條圖), line(折線圖), pie(圓餅圖), radar(雷達圖) 等
    */
   @IsString()
   @IsNotEmpty()
