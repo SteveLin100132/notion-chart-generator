@@ -59,5 +59,12 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
+          volumeMounts:
+            - name: snapshots-storage
+              mountPath: /app/snapshots
+      volumes:
+        - name: snapshots-storage
+          persistentVolumeClaim:
+            claimName: notion-chart-snapshots-pvc
       # imagePullSecrets:
       #   - name: ghcr-secret

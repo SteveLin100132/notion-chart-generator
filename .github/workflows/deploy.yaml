@@ -1,0 +1,49 @@
+name: Deploy to GKE
+
+on:
+  push:
+    branches:
+      - deploy
+
+env:
+  GITHUB_ACTOR: ${{ github.actor }}
+  APP_VERSION: ${{ vars.APP_VERSION }}
+  GKE_ZONE: ${{ vars.GKE_ZONE }}
+  IMAGE_NAME: ${{ vars.IMAGE_NAME }}
+  IMAGE_REPO: ${GITHUB_ACTOR,,}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials  ${{ secrets.GKE_CLUSTER }} --zone $GKE_ZONE --project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Install gke-gcloud-auth-plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin --quiet
+
+      - name: Replace APP_VERSION in kustomization.yaml
+        run: |
+          export APP_VERSION=${{ env.APP_VERSION }}
+          envsubst < ./k8s/kustomization.yaml > ./k8s/kustomization.yaml.tmp
+          mv ./k8s/kustomization.yaml.tmp ./k8s/kustomization.yaml
+
+      - name: Deploy with kustomize
+        run: |
+          kustomize build ./k8s | kubectl apply -f -

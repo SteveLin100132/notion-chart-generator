@@ -7,8 +7,9 @@ resources:
   - deployment.yaml
   - ingress.yaml
   - managed-certificate.yaml
+  - persistent-volume.yaml
   - service.yaml
 
 images:
   - name: ghcr.io/stevelin100132/notion-chart-generator
-    newTag: 1.0.5
+    newTag: ${APP_VERSION}

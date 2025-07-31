@@ -1,0 +1,17 @@
+# GKE Autopilot 兼容配置
+# 移除手動 PV，使用動態配置
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: notion-chart-snapshots-pvc
+  labels:
+    app: notion-chart-generator
+    component: storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard-rwo # GKE Autopilot 預設存儲類
+  resources:
+    requests:
+      storage: 1Gi
+  # 移除 selector，讓 GKE 自動配置
