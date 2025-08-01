@@ -2,7 +2,7 @@
   <img src="assets/images/notion-chart-generator-logo.png" width="100" />
   <h1>Notion Chart Generator</h1>
   <div>
-    <img src="https://img.shields.io/badge/version-1.0.8-blue.svg" />
+    <img src="https://img.shields.io/badge/version-1.0.9-blue.svg" />
     <img src="https://img.shields.io/badge/React-18+-61dafb.svg" />
     <img src="https://img.shields.io/badge/Next.js-14+-black.svg" />
     <img src="https://img.shields.io/badge/NestJS-10+-e0234e.svg" />
@@ -27,7 +27,7 @@
 
 - **分享功能**: 生成分享連結，支援跨平台存取
 - **iframe 嵌入**: 輕鬆嵌入到其他應用程式
-- **快照系統**: 後端快照儲存，確保分享連結永久有效
+- **快照系統**: 動態快照技術，確保分享連結始終顯示最新資料
 - **持久化儲存**: Kubernetes 持久化卷支援，資料永不丟失
 - **表格檢視**: 完整的資料表格檢視，支援橫向滾動和固定側邊欄
 - **自訂 UI 組件**: 使用 Radix UI 打造的現代化使用者介面
@@ -100,7 +100,6 @@ NEXT_PUBLIC_API_URL=http://localhost:3001
 ```env
 PORT=3001
 NODE_ENV=production
-SNAPSHOT_RETENTION_DAYS=7
 CORS_ORIGIN=http://localhost:3000
 ```
 

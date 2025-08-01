@@ -140,12 +140,12 @@
 
 ### 4. 分享與嵌入系統
 
-- **快照生成**: 將圖表資料和設定保存為 JSON 檔案，包含完整的圖表狀態
-- **唯一 ID**: 生成時間戳和隨機字串組合的 ID (例: `chart_1753782323871_766ab85a`)
-- **分享連結**: `http://localhost:3000/?snapshot=ID&embed=true`
+- **動態快照**: 儲存查詢參數而非靜態資料，確保資料即時性
+- **唯一 ID**: 生成時間戳和隨機字串組合的 ID (例: `query_1753784442310_240887d1`)
+- **分享連結**: `http://localhost:3000/?query=ID&embed=true`
 - **iframe 嵌入**: 自動生成嵌入代碼，支援響應式設計
 - **跨平台支援**: 任何設備都能正確顯示，包含行動裝置最佳化
-- **檔案管理**: 自動清理過期快照，可配置保留天數
+- **即時資料**: 每次載入都從 Notion 獲取最新資料
 
 ### 5. 用戶體驗優化
 
@@ -181,7 +181,7 @@
 - **首次載入**: < 3 秒
 - **圖表渲染**: < 1 秒
 - **API 回應**: < 2 秒
-- **快照生成**: < 500ms
+- **動態快照執行**: < 2 秒
 - **記憶體使用**: < 100MB（瀏覽器）
 
 ---
@@ -263,68 +263,73 @@ Content-Type: application/json
 "next_cursor": null
 ```
 
-### 快照管理 API
+### 動態快照管理 API
 
-#### 1. 保存快照
+#### 1. 建立動態快照
 
 ```
-POST /api/snapshots
+POST /api/snapshots/query
 Content-Type: application/json
 
 {
-  "data": [
-    {
-      "x": "string",
-      "y": "number",
-      "label": "string",
-      "aggregateFunction": "string", // 可選
-      "originalCount": "number", // 可選
-      "valueCount": "number" // 可選
-    }
-  ],
-  "chartType": "bar|line|pie|scatter",
-  "aggregateFunction": "SUM|AVG|MIN|MAX|COUNT",
-  "title": "圖表標題",
-  "isDemo": false // 可選
+  "databaseId": "abc123-def456-ghi789",
+  "notionToken": "secret_1234567890abcdef",
+  "xProperty": "Name",
+  "yProperty": "Amount",
+  "chartType": "bar",
+  "aggregateFunction": "SUM",
+  "title": "動態銷售統計圖",
+  "snapshotMode": "dynamic",
+  "isDemo": false
 }
 
 回應:
 {
-  "id": "chart_1753782323871_766ab85a",
-  "message": "Snapshot saved successfully",
-  "timestamp": 1753782323871
+  "id": "query_1753784442310_240887d1",
+  "message": "Dynamic snapshot created successfully",
+  "timestamp": 1753784442310,
+  "snapshotMode": "dynamic"
 }
 ```
 
-#### 2. 讀取快照
+#### 2. 執行動態快照
 
 ```
-GET /api/snapshots/{id}
+GET /api/snapshots/query/{id}
 
 回應:
 {
-  "id": "chart_1690000000000_abc123",
+  "id": "query_1753784442310_240887d1",
   "data": [...],
   "chartType": "bar",
   "aggregateFunction": "SUM",
-  "title": "圖表標題",
+  "title": "動態銷售統計圖",
   "isDemo": false,
-  "timestamp": 1690000000000,
-  "createdAt": "2025-07-29T10:00:00.000Z"
+  "timestamp": 1753784442310,
+  "createdAt": "2025-01-25T10:00:00.000Z",
+  "rawData": [...] // 完整的資料庫資料
 }
 ```
 
-#### 3. 清理過期快照
+#### 3. 取得動態快照設定
 
 ```
-DELETE /api/snapshots/cleanup?days=7
+GET /api/snapshots/query/{id}/config
 
 回應:
+回應:
 {
-  "message": "Cleanup completed",
-  "deletedCount": 5,
-  "errorCount": 0,
-  "retentionDays": 7
+  "id": "query_1753784442310_240887d1",
+  "databaseId": "abc123-def456-ghi789",
+  "xProperty": "Name",
+  "yProperty": "Amount",
+  "chartType": "bar",
+  "aggregateFunction": "SUM",
+  "title": "動態銷售統計圖",
+  "snapshotMode": "dynamic",
+  "isDemo": false,
+  "timestamp": 1753784442310,
+  "createdAt": "2025-01-25T10:00:00.000Z"
 }
 ```
 
@@ -349,11 +354,30 @@ DELETE /api/snapshots/cleanup?days=7
 | Formula      | Mixed           | 計算結果 | 依公式而定           |
 | Rollup       | Mixed           | 聚合值   | 依設定而定           |
 
-### 快照檔案結構
+### 動態快照檔案結構
 
 ```json
 {
-  "id": "chart_1753782323871_766ab85a",
+  "id": "query_1753784442310_240887d1",
+  "databaseId": "abc123-def456-ghi789",
+  "encryptedToken": "encrypted_token_data",
+  "xProperty": "Name",
+  "yProperty": "Amount",
+  "chartType": "bar",
+  "aggregateFunction": "SUM",
+  "title": "動態銷售統計圖",
+  "snapshotMode": "dynamic",
+  "isDemo": false,
+  "timestamp": 1753784442310,
+  "createdAt": "2025-01-25T10:00:00.000Z"
+}
+```
+
+### 執行結果範例
+
+```json
+{
+  "id": "query_1753784442310_240887d1",
   "data": [
     {
       "x": "PM Tool (1)",
@@ -496,17 +520,19 @@ DELETE /api/snapshots/cleanup?days=7
 - Class Validator 進行輸入驗證
 - 支援 Throttling 限制 API 請求頻率
 
-### 3. **快照安全**
+### 3. **動態快照安全**
 
 - 使用 UUID + 時間戳生成隨機 ID
 - 無法列舉或猜測快照 ID
-- 定期清理機制，預設保留 7 天
+- API Token 使用 AES-256-CBC 加密儲存
 - 檔案權限控制，僅應用程式可存取
+- 敏感資料不包含在配置 API 回應中
 
 ### 隱私保護
 
 - 不記錄用戶個人資訊
-- 快照資料本地儲存
+- 動態快照僅儲存查詢參數，不儲存實際資料
+- Token 加密儲存，無法反向解密
 - 可選的資料匿名化
 
 ### 輸入驗證
@@ -515,7 +541,7 @@ DELETE /api/snapshots/cleanup?days=7
 - **Token 格式驗證**: 確保 Token 格式正確
 - **資料庫 ID 驗證**: UUID 格式檢查
 - **屬性名稱檢查**: 防止 SQL 注入和 XSS
-- **檔案大小限制**: 限制快照檔案大小
+- **檔案大小限制**: 限制動態快照設定檔案大小
 - **XSS 防護**: 自動轉義使用者輸入
 
 ---
@@ -533,7 +559,7 @@ DELETE /api/snapshots/cleanup?days=7
 
 - **API 回應時間**: < 2 秒
 - **並發處理**: 支援 50+ 同時連線
-- **快照操作**: < 500ms
+- **動態快照執行**: < 2 秒
 - **記憶體使用**: < 512MB
 
 ### 網路效能
@@ -726,13 +752,13 @@ notion-chart-generator/
 - **Notion API 處理**: 資料解析和轉換
 - **圖表渲染**: 不同圖表類型的渲染
 - **聚合計算**: 各種聚合函數的正確性
-- **快照管理**: 儲存和讀取功能
+- **動態快照管理**: 儲存查詢參數和執行功能
 
 #### 2. 整合測試
 
 - **API 端點**: 所有 API 端點的完整測試
 - **資料流**: 從 Notion 到圖表的完整流程
-- **分享功能**: 快照生成和載入的完整流程
+- **分享功能**: 動態快照生成和載入的完整流程
 
 #### 3. 端對端測試
 

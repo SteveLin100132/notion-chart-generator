@@ -43,18 +43,31 @@ export class ChartDataDto {
 }
 
 /**
- * 建立快照資料傳輸物件
+ * 查詢參數快照資料傳輸物件
  *
- * 用於建立新圖表快照時的資料驗證和傳輸
- * 包含圖表的所有必要資訊，如資料、類型、標題等
+ * 用於建立基於查詢參數的動態快照
+ * 儲存查詢條件而非靜態資料，確保資料即時性
  */
-export class CreateSnapshotDto {
-  /**
-   * 圖表資料陣列
-   * 包含所有要顯示在圖表中的資料點
-   */
-  @IsArray()
-  data: ChartDataDto[];
+export class CreateQuerySnapshotDto {
+  /** Notion 資料庫 ID */
+  @IsString()
+  @IsNotEmpty()
+  databaseId: string;
+
+  /** Notion API Token (加密儲存) */
+  @IsString()
+  @IsNotEmpty()
+  notionToken: string;
+
+  /** X 軸屬性 ID */
+  @IsString()
+  @IsNotEmpty()
+  xProperty: string;
+
+  /** Y 軸屬性 ID */
+  @IsString()
+  @IsNotEmpty()
+  yProperty: string;
 
   /**
    * 圖表類型
@@ -76,6 +89,14 @@ export class CreateSnapshotDto {
   @IsString()
   @IsNotEmpty()
   title: string;
+
+  /**
+   * 快照模式
+   * dynamic: 動態快照 (即時查詢)
+   */
+  @IsOptional()
+  @IsString()
+  snapshotMode?: 'dynamic';
 
   /**
    * 是否為示範資料 (可選)
