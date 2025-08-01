@@ -105,4 +105,11 @@ export class CreateQuerySnapshotDto {
   @IsOptional()
   @IsBoolean()
   isDemo?: boolean;
+
+  /**
+   * 篩選條件 (可選)
+   * 用於過濾資料庫查詢結果的條件
+   */
+  @IsOptional()
+  filters?: any;
 }
