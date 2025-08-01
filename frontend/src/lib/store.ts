@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { FilterGroup } from "@/components/query-builder";
 
 export interface Database {
   id: string;
@@ -7,10 +8,17 @@ export interface Database {
   last_edited_time: string;
 }
 
+export interface PropertyOption {
+  name: string;
+  id: string;
+  color: string;
+}
+
 export interface DatabaseProperty {
   name: string;
   type: string;
   id: string;
+  options?: PropertyOption[]; // 為 select、multi_select、status 類型添加選項
 }
 
 export interface ChartData {
@@ -53,6 +61,13 @@ interface NotionState {
   aggregateFunction: AggregateFunction;
   setAggregateFunction: (func: AggregateFunction) => void;
 
+  // 篩選條件
+  filterGroups: FilterGroup[];
+  setFilterGroups: (groups: FilterGroup[]) => void;
+  addFilterGroup: () => void;
+  removeFilterGroup: (groupIndex: number) => void;
+  updateFilterGroup: (groupIndex: number, group: FilterGroup) => void;
+
   // 圖表資料
   chartData: ChartData[];
   setChartData: (data: ChartData[]) => void;
@@ -86,6 +101,10 @@ interface NotionState {
   setSnapshotMode: (mode: SnapshotMode) => void;
   currentSnapshotId: string | null;
   setCurrentSnapshotId: (id: string | null) => void;
+
+  // Modal 狀態
+  isQueryBuilderModalOpen: boolean;
+  setIsQueryBuilderModalOpen: (isOpen: boolean) => void;
 }
 
 export const useNotionStore = create<NotionState>((set) => ({
@@ -114,6 +133,33 @@ export const useNotionStore = create<NotionState>((set) => ({
   setLabelProperty: (labelProperty) => set({ labelProperty }),
   aggregateFunction: "SUM",
   setAggregateFunction: (aggregateFunction) => set({ aggregateFunction }),
+
+  // 篩選條件
+  filterGroups: [],
+  setFilterGroups: (filterGroups) => set({ filterGroups }),
+  addFilterGroup: () =>
+    set((state) => ({
+      filterGroups: [
+        ...state.filterGroups,
+        {
+          id: Date.now().toString(),
+          logicalOperator: "and",
+          conditions: [],
+        },
+      ],
+    })),
+  removeFilterGroup: (groupIndex) =>
+    set((state) => ({
+      filterGroups: state.filterGroups.filter(
+        (_, index) => index !== groupIndex
+      ),
+    })),
+  updateFilterGroup: (groupIndex, group) =>
+    set((state) => ({
+      filterGroups: state.filterGroups.map((g, index) =>
+        index === groupIndex ? group : g
+      ),
+    })),
 
   // 圖表資料
   chartData: [],
@@ -148,4 +194,9 @@ export const useNotionStore = create<NotionState>((set) => ({
   setSnapshotMode: (snapshotMode) => set({ snapshotMode }),
   currentSnapshotId: null,
   setCurrentSnapshotId: (currentSnapshotId) => set({ currentSnapshotId }),
+
+  // Modal 狀態
+  isQueryBuilderModalOpen: false,
+  setIsQueryBuilderModalOpen: (isQueryBuilderModalOpen) =>
+    set({ isQueryBuilderModalOpen }),
 }));

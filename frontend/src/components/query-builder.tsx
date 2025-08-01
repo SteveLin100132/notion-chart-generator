@@ -1,0 +1,744 @@
+'use client'
+
+import React, { useState, useCallback } from 'react'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/date-picker'
+import { DatabaseProperty } from '@/lib/store'
+import { Plus, X, Trash2 } from 'lucide-react'
+
+// Badge 組件 - 與資料表格中的樣式保持一致
+const Badge: React.FC<{ text: string; color?: string; size?: 'sm' | 'md' }> = ({ 
+  text, 
+  color = 'default', 
+  size = 'sm' 
+}) => {
+  const getColorClasses = (color: string) => {
+    switch (color) {
+      case 'gray':
+      case 'default':
+        return 'bg-gray-100 text-gray-800'
+      case 'brown':
+        return 'bg-amber-100 text-amber-800'
+      case 'orange':
+        return 'bg-orange-100 text-orange-800'
+      case 'yellow':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'green':
+        return 'bg-green-100 text-green-800'
+      case 'blue':
+        return 'bg-blue-100 text-blue-800'
+      case 'purple':
+        return 'bg-purple-100 text-purple-800'
+      case 'pink':
+        return 'bg-pink-100 text-pink-800'
+      case 'red':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const sizeClasses = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1 text-sm'
+
+  return (
+    <span className={`inline-flex items-center rounded-full font-medium whitespace-nowrap ${getColorClasses(color)} ${sizeClasses}`}>
+      {text}
+    </span>
+  )
+}
+
+// Notion 顏色對應表，與 Notion 的實際顏色保持一致
+const NOTION_COLORS: { [key: string]: string } = {
+  // 基本顏色 - 根據 Notion 官方顏色調色板
+  default: '#f2f1ef',
+  gray: '#9B9A97',
+  brown: '#64473A',
+  orange: '#D9730D',
+  yellow: '#DFAB01',
+  green: '#0F7B6C',
+  blue: '#0B6E99',
+  purple: '#6940A5',
+  pink: '#AD1A72',
+  red: '#E03E3E',
+  
+  // 中文顏色名稱映射
+  '灰色': '#9B9A97',
+  '棕色': '#64473A',
+  '橙色': '#D9730D',
+  '黃色': '#DFAB01',
+  '綠色': '#0F7B6C',
+  '藍色': '#0B6E99',
+  '紫色': '#6940A5',
+  '粉色': '#AD1A72',
+  '紅色': '#E03E3E',
+  
+  // 特殊狀態顏色（通常用於 status 屬性）
+  'Not started': '#9B9A97',
+  'In progress': '#0B6E99',
+  'Done': '#0F7B6C',
+  'Canceled': '#AD1A72',
+  '未開始': '#9B9A97',
+  '進行中': '#0B6E99',
+  '已完成': '#0F7B6C',
+  '已取消': '#AD1A72',
+}
+
+// 取得 Notion 顏色的 CSS 值
+const getNotionColor = (colorName: string): string => {
+  if (!colorName) return NOTION_COLORS.default
+  return NOTION_COLORS[colorName] || NOTION_COLORS.default
+}
+
+// 條件運算符定義
+export interface OperatorConfig {
+  value: string
+  label: string
+  hasValue: boolean
+  allowedTypes: string[]
+}
+
+// 針對不同屬性類型的運算符配置
+const OPERATORS: { [key: string]: OperatorConfig[] } = {
+  // 數字類型運算符
+  number: [
+    { value: 'equals', label: '等於 (=)', hasValue: true, allowedTypes: ['number'] },
+    { value: 'does_not_equal', label: '不等於 (≠)', hasValue: true, allowedTypes: ['number'] },
+    { value: 'greater_than', label: '大於 (>)', hasValue: true, allowedTypes: ['number'] },
+    { value: 'less_than', label: '小於 (<)', hasValue: true, allowedTypes: ['number'] },
+    { value: 'greater_than_or_equal_to', label: '大於等於 (≥)', hasValue: true, allowedTypes: ['number'] },
+    { value: 'less_than_or_equal_to', label: '小於等於 (≤)', hasValue: true, allowedTypes: ['number'] },
+    { value: 'is_empty', label: '為空', hasValue: false, allowedTypes: ['number'] },
+    { value: 'is_not_empty', label: '不為空', hasValue: false, allowedTypes: ['number'] },
+  ],
+  
+  // 文字類型運算符
+  text: [
+    { value: 'equals', label: '等於', hasValue: true, allowedTypes: ['title', 'rich_text'] },
+    { value: 'does_not_equal', label: '不等於', hasValue: true, allowedTypes: ['title', 'rich_text'] },
+    { value: 'contains', label: '包含', hasValue: true, allowedTypes: ['title', 'rich_text'] },
+    { value: 'does_not_contain', label: '不包含', hasValue: true, allowedTypes: ['title', 'rich_text'] },
+    { value: 'starts_with', label: '開始於', hasValue: true, allowedTypes: ['title', 'rich_text'] },
+    { value: 'ends_with', label: '結束於', hasValue: true, allowedTypes: ['title', 'rich_text'] },
+    { value: 'is_empty', label: '為空', hasValue: false, allowedTypes: ['title', 'rich_text'] },
+    { value: 'is_not_empty', label: '不為空', hasValue: false, allowedTypes: ['title', 'rich_text'] },
+  ],
+  
+  // 選擇類型運算符
+  select: [
+    { value: 'equals', label: '等於', hasValue: true, allowedTypes: ['select'] },
+    { value: 'does_not_equal', label: '不等於', hasValue: true, allowedTypes: ['select'] },
+    { value: 'is_empty', label: '為空', hasValue: false, allowedTypes: ['select'] },
+    { value: 'is_not_empty', label: '不為空', hasValue: false, allowedTypes: ['select'] },
+  ],
+  
+  // 多選類型運算符
+  multi_select: [
+    { value: 'contains', label: '包含', hasValue: true, allowedTypes: ['multi_select'] },
+    { value: 'does_not_contain', label: '不包含', hasValue: true, allowedTypes: ['multi_select'] },
+    { value: 'is_empty', label: '為空', hasValue: false, allowedTypes: ['multi_select'] },
+    { value: 'is_not_empty', label: '不為空', hasValue: false, allowedTypes: ['multi_select'] },
+  ],
+  
+  // 日期類型運算符
+  date: [
+    { value: 'equals', label: '等於', hasValue: true, allowedTypes: ['date'] },
+    { value: 'before', label: '早於', hasValue: true, allowedTypes: ['date'] },
+    { value: 'after', label: '晚於', hasValue: true, allowedTypes: ['date'] },
+    { value: 'on_or_before', label: '不晚於', hasValue: true, allowedTypes: ['date'] },
+    { value: 'on_or_after', label: '不早於', hasValue: true, allowedTypes: ['date'] },
+    { value: 'between', label: '介於', hasValue: true, allowedTypes: ['date'] },
+    { value: 'past_week', label: '過去一週', hasValue: false, allowedTypes: ['date'] },
+    { value: 'past_month', label: '過去一個月', hasValue: false, allowedTypes: ['date'] },
+    { value: 'past_year', label: '過去一年', hasValue: false, allowedTypes: ['date'] },
+    { value: 'is_empty', label: '為空', hasValue: false, allowedTypes: ['date'] },
+    { value: 'is_not_empty', label: '不為空', hasValue: false, allowedTypes: ['date'] },
+  ],
+  
+  // 勾選方塊類型運算符
+  checkbox: [
+    { value: 'equals', label: '等於', hasValue: true, allowedTypes: ['checkbox'] },
+    { value: 'does_not_equal', label: '不等於', hasValue: true, allowedTypes: ['checkbox'] },
+  ],
+
+  // 狀態類型運算符
+  status: [
+    { value: 'equals', label: '等於', hasValue: true, allowedTypes: ['status'] },
+    { value: 'does_not_equal', label: '不等於', hasValue: true, allowedTypes: ['status'] },
+    { value: 'is_empty', label: '為空', hasValue: false, allowedTypes: ['status'] },
+    { value: 'is_not_empty', label: '不為空', hasValue: false, allowedTypes: ['status'] },
+  ],
+}
+
+// 篩選條件介面
+export interface FilterCondition {
+  id: string
+  property: string
+  operator: string
+  value?: string | number | boolean
+  endValue?: string | number // 為 between 運算符添加結束值
+  logicalOperator?: 'and' | 'or'
+}
+
+// 篩選組介面
+export interface FilterGroup {
+  id: string
+  conditions: FilterCondition[]
+  logicalOperator: 'and' | 'or'
+}
+
+// Query Builder 組件屬性
+interface QueryBuilderProps {
+  properties: DatabaseProperty[]
+  value?: FilterGroup[]
+  onChange?: (filters: FilterGroup[]) => void
+  className?: string
+}
+
+export const QueryBuilder: React.FC<QueryBuilderProps> = ({
+  properties,
+  value = [],
+  onChange,
+  className = '',
+}) => {
+  // 創建新的篩選條件
+  const createNewCondition = useCallback((): FilterCondition => {
+    return {
+      id: `condition_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      property: '',
+      operator: '',
+      value: '',
+    }
+  }, [])
+
+  // 創建新的篩選組
+  const createNewGroup = useCallback((): FilterGroup => {
+    return {
+      id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      conditions: [createNewCondition()],
+      logicalOperator: 'and',
+    }
+  }, [createNewCondition])
+
+  const [groups, setGroups] = useState<FilterGroup[]>(value.length > 0 ? value : [createNewGroup()])
+
+  // 根據屬性類型獲取可用的運算符
+  const getOperatorsForProperty = useCallback((propertyName: string): OperatorConfig[] => {
+    const property = properties.find(p => p.name === propertyName)
+    if (!property) return []
+
+    switch (property.type) {
+      case 'number':
+      case 'formula':
+      case 'rollup':
+        return OPERATORS.number
+      case 'title':
+      case 'rich_text':
+        return OPERATORS.text
+      case 'select':
+        return OPERATORS.select
+      case 'multi_select':
+        return OPERATORS.multi_select
+      case 'date':
+        return OPERATORS.date
+      case 'checkbox':
+        return OPERATORS.checkbox
+      case 'status':
+        return OPERATORS.status
+      default:
+        return OPERATORS.text // 預設使用文字運算符
+    }
+  }, [properties])
+
+  // 更新組並通知父組件
+  const updateGroups = useCallback((newGroups: FilterGroup[]) => {
+    setGroups(newGroups)
+    onChange?.(newGroups)
+  }, [onChange])
+
+  // 添加新的篩選組
+  const addGroup = useCallback(() => {
+    const newGroups = [...groups, createNewGroup()]
+    updateGroups(newGroups)
+  }, [groups, updateGroups, createNewGroup])
+
+  // 刪除篩選組
+  const removeGroup = useCallback((groupId: string) => {
+    if (groups.length <= 1) return // 至少保留一個組
+    const newGroups = groups.filter(g => g.id !== groupId)
+    updateGroups(newGroups)
+  }, [groups, updateGroups])
+
+  // 更新組的邏輯運算符
+  const updateGroupLogicalOperator = useCallback((groupId: string, operator: 'and' | 'or') => {
+    const newGroups = groups.map(group =>
+      group.id === groupId ? { ...group, logicalOperator: operator } : group
+    )
+    updateGroups(newGroups)
+  }, [groups, updateGroups])
+
+  // 添加條件到組
+  const addConditionToGroup = useCallback((groupId: string) => {
+    const newGroups = groups.map(group =>
+      group.id === groupId
+        ? { ...group, conditions: [...group.conditions, createNewCondition()] }
+        : group
+    )
+    updateGroups(newGroups)
+  }, [groups, updateGroups, createNewCondition])
+
+  // 從組中刪除條件
+  const removeConditionFromGroup = useCallback((groupId: string, conditionId: string) => {
+    const newGroups = groups.map(group => {
+      if (group.id === groupId) {
+        const newConditions = group.conditions.filter(c => c.id !== conditionId)
+        // 至少保留一個條件
+        return {
+          ...group,
+          conditions: newConditions.length > 0 ? newConditions : [createNewCondition()]
+        }
+      }
+      return group
+    })
+    updateGroups(newGroups)
+  }, [groups, updateGroups, createNewCondition])
+
+  // 更新條件
+  const updateCondition = useCallback((
+    groupId: string,
+    conditionId: string,
+    updates: Partial<FilterCondition>
+  ) => {
+    const newGroups = groups.map(group =>
+      group.id === groupId
+        ? {
+            ...group,
+            conditions: group.conditions.map(condition =>
+              condition.id === conditionId
+                ? { ...condition, ...updates }
+                : condition
+            )
+          }
+        : group
+    )
+    updateGroups(newGroups)
+  }, [groups, updateGroups])
+
+  // 渲染值輸入框
+  const renderValueInput = (condition: FilterCondition, groupId: string) => {
+    const property = properties.find(p => p.name === condition.property)
+    const operator = getOperatorsForProperty(condition.property).find(op => op.value === condition.operator)
+    
+    if (!operator?.hasValue) return null
+
+    switch (property?.type) {
+      case 'number':
+      case 'formula':
+      case 'rollup':
+        return (
+          <Input
+            type="number"
+            placeholder="輸入數值"
+            value={condition.value as string || ''}
+            onChange={(e) => updateCondition(groupId, condition.id, { value: parseFloat(e.target.value) || 0 })}
+            className="w-32"
+          />
+        )
+      
+      case 'checkbox':
+        return (
+          <Select
+            value={String(condition.value)}
+            onValueChange={(value) => updateCondition(groupId, condition.id, { value: value === 'true' })}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="選擇值" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="true">是</SelectItem>
+              <SelectItem value="false">否</SelectItem>
+            </SelectContent>
+          </Select>
+        )
+      
+      case 'select':
+      case 'multi_select':
+      case 'status':
+        return (
+          <Select
+            value={condition.value as string || ''}
+            onValueChange={(value) => updateCondition(groupId, condition.id, { value })}
+          >
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="選擇選項">
+                {condition.value && property?.options?.find(option => option.name === condition.value) && (
+                  <Badge 
+                    text={condition.value as string} 
+                    color={property.options.find(option => option.name === condition.value)?.color}
+                    size="sm"
+                  />
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="max-w-xs">
+              {property?.options?.map((option) => (
+                <SelectItem key={option.id} value={option.name} className="max-w-full">
+                  <div className="flex items-center space-x-2 min-w-0 max-w-full">
+                    <Badge 
+                      text={option.name} 
+                      color={option.color}
+                      size="sm"
+                    />
+                  </div>
+                </SelectItem>
+              )) || (
+                <SelectItem value="" disabled>
+                  無可用選項
+                </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+        )
+      
+      case 'date':
+        if (condition.operator === 'between') {
+          return (
+            <div className="flex items-center space-x-2">
+              <DatePicker
+                value={condition.value as string || ''}
+                onChange={(value) => updateCondition(groupId, condition.id, { value })}
+                placeholder="開始日期"
+                className="w-36"
+              />
+              <span className="text-sm text-gray-500">至</span>
+              <DatePicker
+                value={condition.endValue as string || ''}
+                onChange={(value) => updateCondition(groupId, condition.id, { endValue: value })}
+                placeholder="結束日期"
+                className="w-36"
+              />
+            </div>
+          )
+        }
+        return (
+          <DatePicker
+            value={condition.value as string || ''}
+            onChange={(value) => updateCondition(groupId, condition.id, { value })}
+            placeholder="選擇日期"
+            className="w-40"
+          />
+        )
+      
+      default:
+        return (
+          <Input
+            placeholder="輸入值"
+            value={condition.value as string || ''}
+            onChange={(e) => updateCondition(groupId, condition.id, { value: e.target.value })}
+            className="w-48"
+          />
+        )
+    }
+  }
+
+  return (
+    <div className={`space-y-4 ${className}`}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium text-gray-700">進階篩選條件</h3>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={addGroup}
+          className="text-xs"
+        >
+          <Plus className="h-3 w-3 mr-1" />
+          新增群組
+        </Button>
+      </div>
+
+      <div className="space-y-3">
+        {groups.map((group, groupIndex) => (
+          <div key={group.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+            {/* 組標題和控制項 */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-2">
+                <Select
+                  value={group.logicalOperator}
+                  onValueChange={(value: 'and' | 'or') => updateGroupLogicalOperator(group.id, value)}
+                >
+                  <SelectTrigger className="w-16 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="and">AND</SelectItem>
+                    <SelectItem value="or">OR</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span className="text-xs text-gray-500">群組 {groupIndex + 1}</span>
+              </div>
+              
+              <div className="flex items-center space-x-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addConditionToGroup(group.id)}
+                  className="h-7 text-xs"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  條件
+                </Button>
+                {groups.length > 1 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeGroup(group.id)}
+                    className="h-7 text-xs text-red-600 hover:text-red-700"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* 條件列表 */}
+            <div className="space-y-2">
+              {group.conditions.map((condition, conditionIndex) => (
+                <div key={condition.id} className="flex items-center space-x-2 bg-white p-2 rounded border">
+                  {/* 邏輯運算符（第一個條件不顯示） */}
+                  {conditionIndex > 0 && (
+                    <div className="w-12 text-center">
+                      <span className="text-xs font-medium text-gray-600">
+                        {group.logicalOperator.toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* 屬性選擇 */}
+                  <Select
+                    value={condition.property}
+                    onValueChange={(value) => updateCondition(group.id, condition.id, { 
+                      property: value, 
+                      operator: '', 
+                      value: '' 
+                    })}
+                  >
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="選擇屬性" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {properties.map((prop) => (
+                        <SelectItem key={prop.name} value={prop.name}>
+                          {prop.name} ({prop.type})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* 運算符選擇 */}
+                  <Select
+                    value={condition.operator}
+                    onValueChange={(value) => updateCondition(group.id, condition.id, { 
+                      operator: value, 
+                      value: '' 
+                    })}
+                    disabled={!condition.property}
+                  >
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="選擇條件" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getOperatorsForProperty(condition.property).map((op) => (
+                        <SelectItem key={op.value} value={op.value}>
+                          {op.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* 值輸入 */}
+                  {renderValueInput(condition, group.id)}
+
+                  {/* 刪除條件按鈕 */}
+                  {group.conditions.length > 1 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeConditionFromGroup(group.id, condition.id)}
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// 工具函數：將QueryBuilder的輸出轉換為Notion API的filter格式
+export const convertToNotionFilter = (groups: FilterGroup[], properties: DatabaseProperty[] = []): any => {
+  if (groups.length === 0) return undefined
+  
+  // 獲取屬性類型用於filter
+  const getPropertyTypeForFilter = (propertyName: string): string => {
+    const property = properties.find(p => p.name === propertyName)
+    if (!property) return 'rich_text' // 預設
+    
+    switch (property.type) {
+      case 'title':
+        return 'title'
+      case 'rich_text':
+        return 'rich_text'
+      case 'number':
+      case 'formula':
+      case 'rollup':
+        return 'number'
+      case 'select':
+        return 'select'
+      case 'multi_select':
+        return 'multi_select'
+      case 'status':
+        return 'status'
+      case 'date':
+        return 'date'
+      case 'checkbox':
+        return 'checkbox'
+      default:
+        return 'rich_text'
+    }
+  }
+  
+  // 轉換單個條件
+  const convertCondition = (condition: FilterCondition): any => {
+    const { property, operator, value } = condition
+    
+    if (!property || !operator) return null
+    
+    // 根據運算符構建filter結構
+    const filterValue: any = {}
+    
+    switch (operator) {
+      case 'equals':
+        filterValue.equals = value
+        break
+      case 'does_not_equal':
+        filterValue.does_not_equal = value
+        break
+      case 'contains':
+        filterValue.contains = value
+        break
+      case 'does_not_contain':
+        filterValue.does_not_contain = value
+        break
+      case 'starts_with':
+        filterValue.starts_with = value
+        break
+      case 'ends_with':
+        filterValue.ends_with = value
+        break
+      case 'greater_than':
+        filterValue.greater_than = value
+        break
+      case 'less_than':
+        filterValue.less_than = value
+        break
+      case 'greater_than_or_equal_to':
+        filterValue.greater_than_or_equal_to = value
+        break
+      case 'less_than_or_equal_to':
+        filterValue.less_than_or_equal_to = value
+        break
+      case 'is_empty':
+        filterValue.is_empty = true
+        break
+      case 'is_not_empty':
+        filterValue.is_not_empty = true
+        break
+      case 'before':
+        filterValue.before = value
+        break
+      case 'after':
+        filterValue.after = value
+        break
+      case 'on_or_before':
+        filterValue.on_or_before = value
+        break
+      case 'on_or_after':
+        filterValue.on_or_after = value
+        break
+      case 'past_week':
+        filterValue.past_week = {}
+        break
+      case 'past_month':  
+        filterValue.past_month = {}
+        break
+      case 'past_year':
+        filterValue.past_year = {}
+        break
+      case 'between':
+        // 對於 between 運算符，需要特殊處理
+        // 返回一個 and 條件，包含 on_or_after 和 on_or_before
+        if (condition.value && condition.endValue) {
+          return {
+            and: [
+              {
+                property,
+                [getPropertyTypeForFilter(property)]: {
+                  on_or_after: condition.value
+                }
+              },
+              {
+                property,
+                [getPropertyTypeForFilter(property)]: {
+                  on_or_before: condition.endValue
+                }
+              }
+            ]
+          }
+        }
+        return null
+    }
+    
+    return {
+      property,
+      [getPropertyTypeForFilter(property)]: filterValue
+    }
+  }
+  
+  // 轉換單個組
+  const convertGroup = (group: FilterGroup): any => {
+    const validConditions = group.conditions
+      .map(convertCondition)
+      .filter(c => c !== null)
+    
+    if (validConditions.length === 0) return null
+    
+    if (validConditions.length === 1) {
+      return validConditions[0]
+    }
+    
+    return {
+      [group.logicalOperator]: validConditions
+    }
+  }
+  
+  // 轉換所有組
+  const validGroups = groups
+    .map(convertGroup)
+    .filter(g => g !== null)
+  
+  if (validGroups.length === 0) return undefined
+  
+  if (validGroups.length === 1) {
+    return validGroups[0]
+  }
+  
+  return {
+    and: validGroups
+  }
+}

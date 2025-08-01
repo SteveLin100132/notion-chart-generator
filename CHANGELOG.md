@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **進階篩選功能 (Query Builder)**
+  - 新增 Query Builder 組件，支援複雜篩選條件建構
+  - 支援多重篩選組合，每組內可設定多個條件
+  - 支援 AND/OR 邏輯運算符組合篩選條件
+  - 根據 Notion 屬性類型提供適合的運算符：
+    - **數字類型**: 等於(=)、不等於(≠)、大於(>)、小於(<)、大於等於(≥)、小於等於(≤)、為空、不為空
+    - **文字類型**: 等於、不等於、包含、不包含、開始於、結束於、為空、不為空
+    - **選擇類型**: 等於、不等於、為空、不為空
+    - **多選類型**: 包含、不包含、為空、不為空
+    - **日期類型**: 等於、不等於、之前、之後、上週、本週、下週、上月、本月、下月、為空、不為空
+    - **布林類型**: 等於、不等於
+  - 視覺化篩選條件建構器，支援動態新增/刪除條件組
+  - 自動轉換篩選條件為 Notion API 格式
+
+### Enhanced
+
+- **動態快照系統**
+
+  - 後端 API 新增 `filters` 參數支援
+  - `CreateQuerySnapshotDto` 新增篩選條件欄位
+  - `QuerySnapshot` interface 支援篩選條件儲存
+  - 查詢執行時自動套用儲存的篩選條件
+
+- **前端狀態管理**
+
+  - Zustand store 新增篩選條件管理功能
+  - 新增 `FilterGroup` 和 `FilterCondition` 類型定義
+  - 提供 `addFilterGroup`、`removeFilterGroup`、`updateFilterGroup` 等操作方法
+
+- **設定面板改進**
+  - 整合 Query Builder 到圖表設定面板
+  - 新增篩選條件區塊，支援進階篩選設定
+  - 改善用戶體驗，提供直觀的篩選條件管理介面
+
 ## [1.0.9] - 2025-08-01
 
 ### Changed
