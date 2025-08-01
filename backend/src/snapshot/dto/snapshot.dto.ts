@@ -92,20 +92,11 @@ export class CreateQuerySnapshotDto {
 
   /**
    * 快照模式
-   * static: 靜態快照 (現有方式)
    * dynamic: 動態快照 (即時查詢)
-   * cached: 快取快照 (定時更新)
    */
   @IsOptional()
   @IsString()
-  snapshotMode?: 'static' | 'dynamic' | 'cached';
-
-  /**
-   * 快取過期時間（分鐘）
-   * 僅在 cached 模式下有效
-   */
-  @IsOptional()
-  cacheExpireMinutes?: number;
+  snapshotMode?: 'dynamic';
 
   /**
    * 是否為示範資料 (可選)
@@ -114,56 +105,4 @@ export class CreateQuerySnapshotDto {
   @IsOptional()
   @IsBoolean()
   isDemo?: boolean;
-}
-
-/**
- * 建立快照資料傳輸物件
- *
- * 用於建立新圖表快照時的資料驗證和傳輸
- * 包含圖表的所有必要資訊，如資料、類型、標題等
- */
-export class CreateSnapshotDto {
-  /**
-   * 圖表資料陣列
-   * 包含所有要顯示在圖表中的資料點
-   */
-  @IsArray()
-  data: ChartDataDto[];
-
-  /**
-   * 圖表類型
-   * 如: bar(長條圖), line(折線圖), pie(圓餅圖), radar(雷達圖) 等
-   */
-  @IsString()
-  @IsNotEmpty()
-  chartType: string;
-
-  /**
-   * 聚合函數
-   * 資料聚合的方式，如: sum(總和), avg(平均), count(計數) 等
-   */
-  @IsString()
-  @IsNotEmpty()
-  aggregateFunction: string;
-
-  /** 圖表標題 */
-  @IsString()
-  @IsNotEmpty()
-  title: string;
-
-  /**
-   * 是否為示範資料 (可選)
-   * 用於標記測試或範例資料，預設為 false
-   */
-  @IsOptional()
-  @IsBoolean()
-  isDemo?: boolean;
-
-  /**
-   * 原始資料庫資料 (可選)
-   * 用於資料表格顯示，包含完整的 Notion 資料庫記錄
-   */
-  @IsOptional()
-  @IsArray()
-  rawData?: any[];
 }

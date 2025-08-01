@@ -51,35 +51,6 @@ export const notionApi = {
 };
 
 export const snapshotApi = {
-  // 保存快照
-  async saveSnapshot(data: {
-    data: ChartData[];
-    chartType: string;
-    aggregateFunction: string;
-    title: string;
-    isDemo?: boolean;
-    rawData?: any[]; // 添加原始資料欄位
-  }): Promise<{ id: string; message: string; timestamp: number }> {
-    const response = await api.post("/snapshots", data);
-    return response.data;
-  },
-
-  // 獲取快照
-  async getSnapshot(id: string): Promise<{
-    id: string;
-    data: ChartData[];
-    chartType: string;
-    aggregateFunction: string;
-    title: string;
-    isDemo: boolean;
-    timestamp: number;
-    createdAt: string;
-    rawData?: any[]; // 添加原始資料欄位
-  }> {
-    const response = await api.get(`/snapshots/${id}`);
-    return response.data;
-  },
-
   // 保存動態查詢快照
   async saveQuerySnapshot(data: {
     databaseId: string;
@@ -89,8 +60,7 @@ export const snapshotApi = {
     chartType: string;
     aggregateFunction: string;
     title: string;
-    snapshotMode?: "static" | "dynamic" | "cached";
-    cacheExpireMinutes?: number;
+    snapshotMode?: "dynamic";
     isDemo?: boolean;
   }): Promise<{
     id: string;
@@ -127,8 +97,7 @@ export const snapshotApi = {
     chartType: string;
     aggregateFunction: string;
     title: string;
-    snapshotMode: "static" | "dynamic" | "cached";
-    cacheExpireMinutes?: number;
+    snapshotMode: "dynamic";
     isDemo: boolean;
     timestamp: number;
     createdAt: string;

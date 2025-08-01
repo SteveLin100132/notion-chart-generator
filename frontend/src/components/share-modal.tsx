@@ -30,6 +30,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({ chartTitle = '圖表' })
   const [isSharing, setIsSharing] = useState(false)
   const [copiedUrl, setCopiedUrl] = useState(false)
   const [copiedEmbed, setCopiedEmbed] = useState(false)
+  const [normalShareUrl, setNormalShareUrl] = useState('')
+  const [embedShareUrl, setEmbedShareUrl] = useState('')
 
   const handleShare = async () => {
     if (!chartData.length) {
@@ -46,8 +48,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({ chartTitle = '圖表' })
         snapshotId = currentSnapshotId
         console.log('使用現有動態快照:', snapshotId)
       }
-      // 如果有 Notion 連接資訊且設定為動態模式，創建動態快照
-      else if (token && selectedDatabase && xAxisProperty && yAxisProperty && snapshotMode === 'dynamic') {
+      // 創建新的動態快照
+      else if (token && selectedDatabase && xAxisProperty && yAxisProperty) {
         console.log('創建新的動態快照...')
         const response = await snapshotApi.saveQuerySnapshot({
           databaseId: selectedDatabase,
@@ -63,25 +65,20 @@ export const ShareModal: React.FC<ShareModalProps> = ({ chartTitle = '圖表' })
         snapshotId = response.id
         console.log('動態快照創建成功:', snapshotId)
       }
-      // 否則創建靜態快照
       else {
-        console.log('創建靜態快照...')
-        const response = await snapshotApi.saveSnapshot({
-          data: chartData,
-          chartType,
-          aggregateFunction,
-          title: chartTitle,
-          isDemo: false,
-          rawData: rawDatabaseData, // 包含原始資料
-        })
-        snapshotId = response.id
-        console.log('靜態快照創建成功:', snapshotId)
+        throw new Error('缺少必要的 Notion 連接資訊')
       }
 
       const baseUrl = window.location.origin
-      const snapshotType = snapshotId.startsWith('query_') ? 'query' : 'snapshot'
-      const url = `${baseUrl}?${snapshotType}=${snapshotId}&embed=true`
-      setShareUrl(url)
+      
+      // 生成分享 URL（動態快照使用 query 參數）
+      const shareUrl = `${baseUrl}?query=${snapshotId}&embed=true`
+      
+      console.log(`生成分享 URL (動態模式):`, shareUrl)
+      
+      setNormalShareUrl(shareUrl)
+      setEmbedShareUrl(shareUrl)  // 兩者使用相同的 URL
+      setShareUrl(shareUrl)  // 保持向後相容
     } catch (error) {
       console.error('分享失敗:', error)
     } finally {
@@ -104,8 +101,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({ chartTitle = '圖表' })
     }
   }
 
-  const embedCode = shareUrl
-    ? `<iframe src="${shareUrl}" width="800" height="600" frameborder="0"></iframe>`
+  const embedCode = embedShareUrl
+    ? `<iframe src="${embedShareUrl}" width="800" height="600" frameborder="0" allowfullscreen></iframe>`
     : ''
 
   return (
@@ -130,24 +127,24 @@ export const ShareModal: React.FC<ShareModalProps> = ({ chartTitle = '圖表' })
           <DialogTitle>分享圖表</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          {shareUrl ? (
+          {normalShareUrl ? (
             <>
-              {/* 直接連結 */}
+              {/* 分享連結 */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                   <Link className="h-4 w-4" />
-                  直接連結
+                  分享連結 (動態快照)
                 </label>
                 <div className="flex space-x-2">
                   <Input
-                    value={shareUrl}
+                    value={normalShareUrl}
                     readOnly
                     className="flex-1"
                   />
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => copyToClipboard(shareUrl, 'url')}
+                    onClick={() => copyToClipboard(normalShareUrl, 'url')}
                     className="shrink-0 border-gray-300 text-gray-700 hover:bg-gray-50"
                   >
                     {copiedUrl ? (
@@ -157,13 +154,16 @@ export const ShareModal: React.FC<ShareModalProps> = ({ chartTitle = '圖表' })
                     )}
                   </Button>
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  此連結可在新分頁或視窗中開啟，以嵌入模式顯示圖表
+                </p>
               </div>
 
               {/* 嵌入代碼 */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                   <Clipboard className="h-4 w-4" />
-                  嵌入代碼
+                  HTML 嵌入代碼
                 </label>
                 <div className="flex space-x-2">
                   <Input
@@ -184,13 +184,16 @@ export const ShareModal: React.FC<ShareModalProps> = ({ chartTitle = '圖表' })
                     )}
                   </Button>
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  將此代碼貼到網頁中以嵌入圖表
+                </p>
               </div>
 
               {/* 提示訊息 */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <p className="text-sm text-blue-800 flex items-center gap-2">
                   <Lightbulb className="h-4 w-4" />
-                  此連結可在任何設備上開啟，圖表資料已安全儲存。
+                  動態快照會顯示 Notion 資料庫的最新內容，適合經常更新的資料。
                 </p>
               </div>
             </>

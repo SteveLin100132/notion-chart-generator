@@ -8,17 +8,16 @@ import {
   Query,
 } from '@nestjs/common';
 import { SnapshotService } from './snapshot.service';
-import { CreateSnapshotDto, CreateQuerySnapshotDto } from './dto/snapshot.dto';
+import { CreateQuerySnapshotDto } from './dto/snapshot.dto';
 
 /**
  * 快照控制器
  *
- * 提供圖表快照相關的 RESTful API 端點，包括：
- * - POST /snapshots - 建立新的快照
- * - GET /snapshots/:id - 根據 ID 取得快照
- * - DELETE /snapshots/cleanup - 清理過期快照
+ * 提供動態快照管理的 REST API 端點：
+ * - POST /snapshots/query - 建立動態查詢快照
+ * - GET /snapshots/query/:id - 執行動態快照查詢
  *
- * @controller snapshots
+ * 動態快照儲存查詢參數而非靜態資料，確保資料即時性
  */
 @Controller('snapshots')
 export class SnapshotController {
@@ -31,28 +30,6 @@ export class SnapshotController {
   constructor(private readonly snapshotService: SnapshotService) {}
 
   /**
-   * 建立新的圖表快照
-   *
-   * @route POST /snapshots
-   * @param dto - 建立快照所需的資料傳輸物件
-   * @returns 包含快照 ID 和建立結果的回應物件
-   *
-   * @example
-   * POST /snapshots
-   * Body: {
-   *   "data": [...],
-   *   "chartType": "bar",
-   *   "aggregateFunction": "sum",
-   *   "title": "銷售統計圖",
-   *   "isDemo": false
-   * }
-   */
-  @Post()
-  async createSnapshot(@Body() dto: CreateSnapshotDto) {
-    return this.snapshotService.createSnapshot(dto);
-  }
-
-  /**
    * 根據 ID 取得特定的快照資料
    *
    * @route GET /snapshots/:id
@@ -63,30 +40,6 @@ export class SnapshotController {
    * @example
    * GET /snapshots/chart_1753782323871_766ab85a
    */
-  @Get(':id')
-  async getSnapshot(@Param('id') id: string) {
-    return this.snapshotService.getSnapshot(id);
-  }
-
-  /**
-   * 清理過期的快照檔案
-   *
-   * @route DELETE /snapshots/cleanup
-   * @param days - 查詢參數，指定保留天數 (可選，預設為 7 天)
-   * @returns 清理作業的執行結果統計
-   *
-   * @example
-   * DELETE /snapshots/cleanup?days=14
-   * 清理超過 14 天的快照檔案
-   *
-   * DELETE /snapshots/cleanup
-   * 使用預設值清理超過 7 天的快照檔案
-   */
-  @Delete('cleanup')
-  async cleanupSnapshots(@Query('days') days?: string) {
-    const retentionDays = days ? parseInt(days, 10) : 7;
-    return this.snapshotService.cleanupSnapshots(retentionDays);
-  }
 
   /**
    * 建立動態查詢快照
@@ -105,8 +58,7 @@ export class SnapshotController {
    *   "chartType": "bar",
    *   "aggregateFunction": "sum",
    *   "title": "動態銷售統計圖",
-   *   "snapshotMode": "dynamic",
-   *   "cacheExpireMinutes": 60
+   *   "snapshotMode": "dynamic"
    * }
    */
   @Post('query')
