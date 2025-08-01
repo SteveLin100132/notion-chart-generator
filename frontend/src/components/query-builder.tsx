@@ -181,10 +181,11 @@ export interface FilterCondition {
   logicalOperator?: 'and' | 'or'
 }
 
-// 篩選組介面
+// 篩選組介面（支援嵌套子群組）
 export interface FilterGroup {
   id: string
   conditions: FilterCondition[]
+  subgroups?: FilterGroup[] // 新增子群組支援
   logicalOperator: 'and' | 'or'
 }
 
@@ -217,6 +218,7 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
     return {
       id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       conditions: [createNewCondition()],
+      subgroups: [], // 初始化子群組為空陣列
       logicalOperator: 'and',
     }
   }, [createNewCondition])
@@ -310,23 +312,158 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
     conditionId: string,
     updates: Partial<FilterCondition>
   ) => {
-    const newGroups = groups.map(group =>
-      group.id === groupId
-        ? {
-            ...group,
-            conditions: group.conditions.map(condition =>
-              condition.id === conditionId
-                ? { ...condition, ...updates }
-                : condition
-            )
-          }
-        : group
-    )
+    const updateGroupRecursively = (group: FilterGroup): FilterGroup => {
+      if (group.id === groupId) {
+        return {
+          ...group,
+          conditions: group.conditions.map(condition =>
+            condition.id === conditionId
+              ? { ...condition, ...updates }
+              : condition
+          )
+        }
+      }
+      
+      // 遞歸檢查子群組
+      if (group.subgroups && group.subgroups.length > 0) {
+        const updatedSubgroups = group.subgroups.map(updateGroupRecursively)
+        if (updatedSubgroups.some((sg, index) => sg !== group.subgroups![index])) {
+          return { ...group, subgroups: updatedSubgroups }
+        }
+      }
+      
+      return group
+    }
+
+    const newGroups = groups.map(updateGroupRecursively)
     updateGroups(newGroups)
   }, [groups, updateGroups])
 
+  // 添加子群組到指定群組
+  const addSubgroupToGroup = useCallback((parentGroupId: string) => {
+    const addSubgroupRecursively = (group: FilterGroup): FilterGroup => {
+      if (group.id === parentGroupId) {
+        return {
+          ...group,
+          subgroups: [...(group.subgroups || []), createNewGroup()]
+        }
+      }
+      
+      // 遞歸檢查子群組
+      if (group.subgroups && group.subgroups.length > 0) {
+        const updatedSubgroups = group.subgroups.map(addSubgroupRecursively)
+        if (updatedSubgroups.some((sg, index) => sg !== group.subgroups![index])) {
+          return { ...group, subgroups: updatedSubgroups }
+        }
+      }
+      
+      return group
+    }
+
+    const newGroups = groups.map(addSubgroupRecursively)
+    updateGroups(newGroups)
+  }, [groups, updateGroups, createNewGroup])
+
+  // 從群組中刪除子群組
+  const removeSubgroupFromGroup = useCallback((parentGroupId: string, subgroupId: string) => {
+    const removeSubgroupRecursively = (group: FilterGroup): FilterGroup => {
+      if (group.id === parentGroupId) {
+        return {
+          ...group,
+          subgroups: group.subgroups?.filter(sg => sg.id !== subgroupId) || []
+        }
+      }
+      
+      // 遞歸檢查子群組
+      if (group.subgroups && group.subgroups.length > 0) {
+        const updatedSubgroups = group.subgroups.map(removeSubgroupRecursively)
+        if (updatedSubgroups.some((sg, index) => sg !== group.subgroups![index])) {
+          return { ...group, subgroups: updatedSubgroups }
+        }
+      }
+      
+      return group
+    }
+
+    const newGroups = groups.map(removeSubgroupRecursively)
+    updateGroups(newGroups)
+  }, [groups, updateGroups])
+
+  // 遞歸更新子群組的邏輯運算符
+  const updateSubgroupLogicalOperator = useCallback((subgroupId: string, operator: 'and' | 'or') => {
+    const updateSubgroupRecursively = (group: FilterGroup): FilterGroup => {
+      if (group.id === subgroupId) {
+        return { ...group, logicalOperator: operator }
+      }
+      
+      // 遞歸檢查子群組
+      if (group.subgroups && group.subgroups.length > 0) {
+        const updatedSubgroups = group.subgroups.map(updateSubgroupRecursively)
+        if (updatedSubgroups.some((sg, index) => sg !== group.subgroups![index])) {
+          return { ...group, subgroups: updatedSubgroups }
+        }
+      }
+      
+      return group
+    }
+
+    const newGroups = groups.map(updateSubgroupRecursively)
+    updateGroups(newGroups)
+  }, [groups, updateGroups])
+
+  // 遞歸添加條件到子群組
+  const addConditionToSubgroup = useCallback((subgroupId: string) => {
+    const addConditionRecursively = (group: FilterGroup): FilterGroup => {
+      if (group.id === subgroupId) {
+        return {
+          ...group,
+          conditions: [...group.conditions, createNewCondition()]
+        }
+      }
+      
+      // 遞歸檢查子群組
+      if (group.subgroups && group.subgroups.length > 0) {
+        const updatedSubgroups = group.subgroups.map(addConditionRecursively)
+        if (updatedSubgroups.some((sg, index) => sg !== group.subgroups![index])) {
+          return { ...group, subgroups: updatedSubgroups }
+        }
+      }
+      
+      return group
+    }
+
+    const newGroups = groups.map(addConditionRecursively)
+    updateGroups(newGroups)
+  }, [groups, updateGroups, createNewCondition])
+
+  // 遞歸從子群組中刪除條件
+  const removeConditionFromSubgroup = useCallback((subgroupId: string, conditionId: string) => {
+    const removeConditionRecursively = (group: FilterGroup): FilterGroup => {
+      if (group.id === subgroupId) {
+        const newConditions = group.conditions.filter(c => c.id !== conditionId)
+        return {
+          ...group,
+          conditions: newConditions.length > 0 ? newConditions : [createNewCondition()]
+        }
+      }
+      
+      // 遞歸檢查子群組
+      if (group.subgroups && group.subgroups.length > 0) {
+        const updatedSubgroups = group.subgroups.map(removeConditionRecursively)
+        if (updatedSubgroups.some((sg, index) => sg !== group.subgroups![index])) {
+          return { ...group, subgroups: updatedSubgroups }
+        }
+      }
+      
+      return group
+    }
+
+    const newGroups = groups.map(removeConditionRecursively)
+    updateGroups(newGroups)
+  }, [groups, updateGroups, createNewCondition])
+
   // 渲染值輸入框
-  const renderValueInput = (condition: FilterCondition, groupId: string) => {
+  const renderValueInput = useCallback((condition: FilterCondition, groupId: string) => {
     const property = properties.find(p => p.name === condition.property)
     const operator = getOperatorsForProperty(condition.property).find(op => op.value === condition.operator)
     
@@ -440,7 +577,180 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
           />
         )
     }
-  }
+  }, [properties, getOperatorsForProperty, updateCondition])
+
+  // 遞歸渲染群組（支援子群組）
+  const renderGroup = useCallback((group: FilterGroup, groupIndex: number, isSubgroup: boolean = false, parentGroupId?: string) => {
+    return (
+      <div key={group.id} className={`border rounded-lg p-4 ${isSubgroup ? 'border-gray-300 bg-gray-25 ml-6' : 'border-gray-200 bg-gray-50'}`}>
+        {/* 組標題和控制項 */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-2">
+            <Select
+              value={group.logicalOperator}
+              onValueChange={(value: 'and' | 'or') => 
+                isSubgroup 
+                  ? updateSubgroupLogicalOperator(group.id, value)
+                  : updateGroupLogicalOperator(group.id, value)
+              }
+            >
+              <SelectTrigger className="w-16 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="and">AND</SelectItem>
+                <SelectItem value="or">OR</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-xs text-gray-500">
+              {isSubgroup ? `子群組 ${groupIndex + 1}` : `群組 ${groupIndex + 1}`}
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => 
+                isSubgroup 
+                  ? addConditionToSubgroup(group.id)
+                  : addConditionToGroup(group.id)
+              }
+              className="h-7 text-xs"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              條件
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => addSubgroupToGroup(group.id)}
+              className="h-7 text-xs"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              子群組
+            </Button>
+            {((!isSubgroup && groups.length > 1) || (isSubgroup && parentGroupId)) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => 
+                  isSubgroup && parentGroupId
+                    ? removeSubgroupFromGroup(parentGroupId, group.id)
+                    : removeGroup(group.id)
+                }
+                className="h-7 text-xs text-red-600 hover:text-red-700"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* 條件列表 */}
+        <div className="space-y-2">
+          {group.conditions.map((condition, conditionIndex) => (
+            <div key={condition.id} className="flex items-center space-x-2 bg-white p-2 rounded border">
+              {/* 邏輯運算符（第一個條件不顯示） */}
+              {conditionIndex > 0 && (
+                <div className="w-12 text-center">
+                  <span className="text-xs font-medium text-gray-600">
+                    {group.logicalOperator.toUpperCase()}
+                  </span>
+                </div>
+              )}
+
+              {/* 屬性選擇 */}
+              <Select
+                value={condition.property}
+                onValueChange={(value) => updateCondition(group.id, condition.id, { 
+                  property: value, 
+                  operator: '', 
+                  value: '' 
+                })}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="選擇屬性" />
+                </SelectTrigger>
+                <SelectContent>
+                  {properties.map((prop) => (
+                    <SelectItem key={prop.name} value={prop.name}>
+                      {prop.name} ({prop.type})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* 運算符選擇 */}
+              <Select
+                value={condition.operator}
+                onValueChange={(value) => updateCondition(group.id, condition.id, { 
+                  operator: value, 
+                  value: '' 
+                })}
+                disabled={!condition.property}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="選擇條件" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getOperatorsForProperty(condition.property).map((op) => (
+                    <SelectItem key={op.value} value={op.value}>
+                      {op.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* 值輸入 */}
+              {renderValueInput(condition, group.id)}
+
+              {/* 刪除條件按鈕 */}
+              {group.conditions.length > 1 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => 
+                    isSubgroup 
+                      ? removeConditionFromSubgroup(group.id, condition.id)
+                      : removeConditionFromGroup(group.id, condition.id)
+                  }
+                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* 子群組 */}
+        {group.subgroups && group.subgroups.length > 0 && (
+          <div className="mt-4 space-y-3">
+            <div className="text-xs text-gray-500 font-medium">子群組</div>
+            {group.subgroups.map((subgroup, subgroupIndex) => (
+              renderGroup(subgroup, subgroupIndex, true, group.id)
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }, [
+    groups, 
+    properties, 
+    updateGroupLogicalOperator,
+    updateSubgroupLogicalOperator,
+    addConditionToGroup,
+    addConditionToSubgroup,
+    addSubgroupToGroup,
+    removeGroup,
+    removeSubgroupFromGroup,
+    removeConditionFromGroup,
+    removeConditionFromSubgroup,
+    updateCondition,
+    getOperatorsForProperty,
+    renderValueInput
+  ])
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -458,123 +768,7 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
       </div>
 
       <div className="space-y-3">
-        {groups.map((group, groupIndex) => (
-          <div key={group.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-            {/* 組標題和控制項 */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2">
-                <Select
-                  value={group.logicalOperator}
-                  onValueChange={(value: 'and' | 'or') => updateGroupLogicalOperator(group.id, value)}
-                >
-                  <SelectTrigger className="w-16 h-8 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="and">AND</SelectItem>
-                    <SelectItem value="or">OR</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span className="text-xs text-gray-500">群組 {groupIndex + 1}</span>
-              </div>
-              
-              <div className="flex items-center space-x-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => addConditionToGroup(group.id)}
-                  className="h-7 text-xs"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  條件
-                </Button>
-                {groups.length > 1 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeGroup(group.id)}
-                    className="h-7 text-xs text-red-600 hover:text-red-700"
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {/* 條件列表 */}
-            <div className="space-y-2">
-              {group.conditions.map((condition, conditionIndex) => (
-                <div key={condition.id} className="flex items-center space-x-2 bg-white p-2 rounded border">
-                  {/* 邏輯運算符（第一個條件不顯示） */}
-                  {conditionIndex > 0 && (
-                    <div className="w-12 text-center">
-                      <span className="text-xs font-medium text-gray-600">
-                        {group.logicalOperator.toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* 屬性選擇 */}
-                  <Select
-                    value={condition.property}
-                    onValueChange={(value) => updateCondition(group.id, condition.id, { 
-                      property: value, 
-                      operator: '', 
-                      value: '' 
-                    })}
-                  >
-                    <SelectTrigger className="w-40">
-                      <SelectValue placeholder="選擇屬性" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {properties.map((prop) => (
-                        <SelectItem key={prop.name} value={prop.name}>
-                          {prop.name} ({prop.type})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {/* 運算符選擇 */}
-                  <Select
-                    value={condition.operator}
-                    onValueChange={(value) => updateCondition(group.id, condition.id, { 
-                      operator: value, 
-                      value: '' 
-                    })}
-                    disabled={!condition.property}
-                  >
-                    <SelectTrigger className="w-40">
-                      <SelectValue placeholder="選擇條件" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getOperatorsForProperty(condition.property).map((op) => (
-                        <SelectItem key={op.value} value={op.value}>
-                          {op.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {/* 值輸入 */}
-                  {renderValueInput(condition, group.id)}
-
-                  {/* 刪除條件按鈕 */}
-                  {group.conditions.length > 1 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeConditionFromGroup(group.id, condition.id)}
-                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+        {groups.map((group, groupIndex) => renderGroup(group, groupIndex))}
       </div>
     </div>
   )
@@ -710,20 +904,28 @@ export const convertToNotionFilter = (groups: FilterGroup[], properties: Databas
     }
   }
   
-  // 轉換單個組
+  // 轉換單個組（遞歸處理子群組）
   const convertGroup = (group: FilterGroup): any => {
     const validConditions = group.conditions
       .map(convertCondition)
       .filter(c => c !== null)
     
-    if (validConditions.length === 0) return null
+    // 遞歸處理子群組
+    const validSubgroups = group.subgroups 
+      ? group.subgroups.map(convertGroup).filter(sg => sg !== null)
+      : []
     
-    if (validConditions.length === 1) {
-      return validConditions[0]
+    // 合併條件和子群組
+    const allItems = [...validConditions, ...validSubgroups]
+    
+    if (allItems.length === 0) return null
+    
+    if (allItems.length === 1) {
+      return allItems[0]
     }
     
     return {
-      [group.logicalOperator]: validConditions
+      [group.logicalOperator]: allItems
     }
   }
   
