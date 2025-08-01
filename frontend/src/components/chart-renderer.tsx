@@ -274,6 +274,12 @@ function getChartOption(data: ChartData[], chartType: ChartType, title: string) 
       const maxValue = Math.max(...data.map(d => d.y))
       const suggestedMax = maxValue > 0 ? Math.ceil(maxValue * 1.2) : 100
       
+      // 預先定義指標信息，供 tooltip 使用
+      const radarIndicators = data.map(item => ({
+        name: item.label,
+        max: suggestedMax,
+      }))
+      
       return {
         ...baseOption,
         tooltip: {
@@ -282,10 +288,15 @@ function getChartOption(data: ChartData[], chartType: ChartType, title: string) 
             if (params.seriesType === 'radar') {
               const data = params.data
               let tooltipText = `${data.name}<br/>`
-              data.value.forEach((val: number, index: number) => {
-                const indicator = params.radar.indicator[index]
-                tooltipText += `${indicator.name}: ${val}<br/>`
-              })
+              
+              if (data.value && Array.isArray(data.value)) {
+                data.value.forEach((val: number, index: number) => {
+                  // 使用預先定義的指標名稱
+                  const indicatorName = radarIndicators[index]?.name || `維度 ${index + 1}`
+                  tooltipText += `${indicatorName}: ${val}<br/>`
+                })
+              }
+              
               return tooltipText
             }
             return params.name + ': ' + params.value
@@ -298,10 +309,7 @@ function getChartOption(data: ChartData[], chartType: ChartType, title: string) 
           },
         },
         radar: {
-          indicator: data.map(item => ({
-            name: item.label,
-            max: suggestedMax,
-          })),
+          indicator: radarIndicators,
           center: ['50%', '60%'],
           radius: '70%',
           axisName: {

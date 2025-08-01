@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useNotionStore } from '@/lib/store'
-import { notionApi, dataProcessor } from '@/lib/api'
+import { notionApi, dataProcessor, snapshotApi } from '@/lib/api'
 import { BarChart3, TrendingUp, PieChart, Loader2, Target, Link, BarChart, Lightbulb } from 'lucide-react'
 import { NotionLogo } from '@/components/ui/notion-logo'
 
@@ -38,6 +38,10 @@ export const SettingsPanel: React.FC = () => {
     setIsLoading,
     error,
     setError,
+    snapshotMode,
+    setSnapshotMode,
+    currentSnapshotId,
+    setCurrentSnapshotId,
   } = useNotionStore()
 
   const [isLoadingDatabases, setIsLoadingDatabases] = useState(false)
@@ -78,7 +82,7 @@ export const SettingsPanel: React.FC = () => {
 
   const handleGenerateChart = async () => {
     console.log('開始生成圖表...')
-    console.log('設定:', { selectedDatabase, xAxisProperty, yAxisProperty, labelProperty, aggregateFunction })
+    console.log('設定:', { selectedDatabase, xAxisProperty, yAxisProperty, labelProperty, aggregateFunction, snapshotMode })
     
     if (!selectedDatabase || !xAxisProperty) {
       setError('請選擇資料庫和 X 軸屬性')
@@ -105,59 +109,63 @@ export const SettingsPanel: React.FC = () => {
     setNextCursor(null)
 
     try {
-      console.log('正在查詢資料庫資料...')
-      // 查詢資料庫資料 - 獲取所有資料用於圖表生成
-      const response = await notionApi.queryDatabase(token, selectedDatabase, undefined, 100)
-      console.log('API 回應:', response)
-      
-      let allData = response.results || response // 相容新舊格式
-      let hasMore = response.has_more
-      let nextCursor = response.next_cursor
-
-      console.log('初始資料數量:', allData.length)
-      console.log('是否有更多資料:', hasMore)
-
-      // 如果有更多資料，繼續獲取
-      while (hasMore && nextCursor) {
-        console.log('載入更多資料，游標:', nextCursor)
-        const nextResponse = await notionApi.queryDatabase(token, selectedDatabase, undefined, 100, nextCursor)
-        allData = [...allData, ...nextResponse.results]
-        hasMore = nextResponse.has_more
-        nextCursor = nextResponse.next_cursor
-        console.log('累積資料數量:', allData.length)
-      }
-      
-      if (allData.length === 0) {
-        setError('資料庫中沒有資料')
-        setIsLoading(false)
-        return
-      }
-
-      console.log('最終資料數量:', allData.length)
-      console.log('資料範例:', allData[0])
-
-      // 存儲原始資料
-      setRawDatabaseData(allData)
-
-      console.log('開始處理資料...')
-      // 處理資料
-      const processedData = dataProcessor.processNotionData(
-        allData,
-        xAxisProperty,
-        actualYAxisProperty,
-        labelProperty === 'none' ? '' : labelProperty,
-        actualAggregateFunction
-      )
-
-      console.log('處理後的圖表資料:', processedData)
-      setChartData(processedData)
-      console.log('圖表生成成功！')
+      // 只使用動態模式
+      await generateDynamicChart(actualYAxisProperty, actualAggregateFunction)
     } catch (err: any) {
       console.error('生成圖表錯誤:', err)
       console.error('錯誤詳情:', err.response?.data)
       setError(err.response?.data?.message || err.message || '生成圖表失敗')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const generateDynamicChart = async (actualYAxisProperty: string, actualAggregateFunction: string) => {
+    console.log('正在建立動態快照...')
+    
+    try {
+      // 建立動態快照
+      const snapshotResponse = await snapshotApi.saveQuerySnapshot({
+        databaseId: selectedDatabase,
+        notionToken: token,
+        xProperty: xAxisProperty,
+        yProperty: actualYAxisProperty,
+        chartType,
+        aggregateFunction: actualAggregateFunction,
+        title: `動態圖表 - ${new Date().toLocaleString()}`,
+        snapshotMode,
+        isDemo: false,
+      })
+
+      console.log('動態快照建立成功:', snapshotResponse)
+      
+      // 執行動態查詢以取得資料
+      const chartData = await snapshotApi.executeQuerySnapshot(snapshotResponse.id)
+      console.log('動態查詢執行成功:', chartData)
+      
+      // 更新狀態
+      setChartData(chartData.data)
+      setCurrentSnapshotId(snapshotResponse.id)
+      
+      // 設置原始資料庫資料供資料表格使用
+      if (chartData.rawData && Array.isArray(chartData.rawData)) {
+        console.log('設置原始資料庫資料:', chartData.rawData.length, '筆')
+        setRawDatabaseData(chartData.rawData)
+      } else {
+        console.warn('動態快照沒有包含原始資料')
+        setRawDatabaseData([])
+      }
+      
+      // 更新 URL 以反映當前的動態快照狀態
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.set('query', snapshotResponse.id)
+      window.history.pushState({}, '', newUrl.toString())
+      
+      console.log('圖表生成成功（動態模式）！')
+      
+    } catch (error) {
+      console.error('動態快照建立失敗:', error)
+      throw error  // 直接拋出錯誤，不再回退到靜態模式
     }
   }
 

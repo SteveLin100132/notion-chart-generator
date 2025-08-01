@@ -5,6 +5,83 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.9] - 2025-08-01
+
+### Changed
+
+- **快照系統重構** - 簡化為純動態快照架構
+  - **BREAKING CHANGE**: 移除靜態快照和快取快照模式
+  - 統一使用動態快照，確保資料即時性
+  - 移除複雜的快照模式選擇器，提升用戶體驗
+  - 簡化分享機制，所有分享連結統一使用動態快照
+
+### Removed
+
+- **移除靜態快照功能**
+
+  - 移除後端 API 端點：
+    - `POST /api/snapshots` - 創建靜態快照
+    - `GET /api/snapshots/:id` - 獲取靜態快照
+    - `DELETE /api/snapshots/cleanup` - 清理過期快照
+  - 移除前端靜態快照相關組件和邏輯
+  - 移除 `CreateSnapshotDto` 資料傳輸物件
+  - 移除快照模式選擇器 UI
+
+- **移除快取快照功能**
+  - 完全移除快取快照模式及相關代碼
+  - 簡化快照類型定義
+
+### Enhanced
+
+- **分享功能優化**
+
+  - 統一分享連結格式：`?query=query_xxxxx&embed=true`
+  - 移除靜態快照分享選項，簡化用戶選擇
+  - 所有分享連結自動使用最新的 Notion 資料
+
+- **頁面載入優化**
+  - 專注於動態快照載入：`?query=query_xxxxx`
+  - 移除靜態快照 URL 參數支援
+  - 簡化 URL 處理邏輯
+
+### Added
+
+- **動態快照功能** - 全新的即時資料同步解決方案
+  - 動態快照 API 端點：
+    - `POST /api/snapshots/query` - 創建動態快照
+    - `GET /api/snapshots/query/:id` - 執行動態快照查詢（獲取即時資料）
+    - `GET /api/snapshots/query/:id/config` - 獲取動態快照配置
+  - API Token 安全加密儲存 (AES-256-CBC)
+  - 支援大型資料庫的分頁查詢
+  - 完整的錯誤處理和回退機制
+
+### Improved
+
+- **Notion 資料處理**
+
+  - 改善資料聚合功能 (SUM, AVG, MIN, MAX, COUNT)
+  - 增強屬性值提取邏輯
+  - 支援更多 Notion 屬性類型 (formula, rollup 等)
+  - 優化大量資料處理效能
+
+- **TypeScript 錯誤修復**
+  - 修復雷達圖 tooltip 的 TypeScript 安全性問題
+  - 使用防禦性程式設計確保圖表渲染穩定性
+
+### Technical
+
+- **後端架構優化**
+
+  - NestJS 模組依賴注入配置完善
+  - SnapshotService 支援 NotionService 整合
+  - 加密服務使用現代 crypto API (createCipheriv/createDecipheriv)
+  - 移除已棄用的 crypto 函數
+
+- **前端狀態管理**
+  - 新增動態快照相關狀態管理
+  - 優化分享 URL 處理邏輯
+  - 改善使用者體驗流程
+
 ## [1.0.8] - 2025-07-31
 
 ### Added

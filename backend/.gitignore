@@ -23,6 +23,7 @@ coverage/
 
 # 快照檔案
 snapshots/*.json
+snapshots/**/*.json
 !snapshots/.gitkeep
 
 # 其他

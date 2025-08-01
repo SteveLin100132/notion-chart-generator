@@ -217,60 +217,55 @@ curl -X POST http://localhost:3001/api/notion/query \
 
 快照系統用於保存和分享圖表配置及資料，採用檔案系統儲存。
 
-### 1. 保存快照
+### 1. 建立動態查詢快照
 
-**端點**: `POST /api/snapshots`
+**端點**: `POST /api/snapshots/query`
 
-**描述**: 保存圖表的快照資料
+**描述**: 建立動態查詢快照，支援即時資料同步
 
 **請求格式**:
 
 ```json
 {
-  "data": [
-    {
-      "x": "string",
-      "y": "number",
-      "label": "string",
-      "aggregateFunction": "string", // 可選
-      "originalCount": "number", // 可選
-      "valueCount": "number" // 可選
-    }
-  ],
-  "chartType": "bar|line|pie|scatter",
-  "aggregateFunction": "SUM|AVG|MIN|MAX|COUNT",
-  "title": "string",
-  "isDemo": false // 可選，預設 false
+  "databaseId": "abc123-def456-ghi789",
+  "notionToken": "secret_1234567890abcdef",
+  "xProperty": "Name",
+  "yProperty": "Amount",
+  "chartType": "bar",
+  "aggregateFunction": "SUM",
+  "title": "動態銷售統計圖",
+  "snapshotMode": "dynamic",
+  "isDemo": false
 }
 ```
+
+**欄位說明**:
+
+- `databaseId`: Notion 資料庫 ID
+- `notionToken`: Notion API Token (會被加密儲存)
+- `xProperty`: X 軸屬性名稱
+- `yProperty`: Y 軸屬性名稱
+- `chartType`: 圖表類型 (`bar`, `line`, `pie`, `radar`)
+- `aggregateFunction`: 聚合函數 (`SUM`, `AVG`, `MIN`, `MAX`, `COUNT`)
+- `title`: 圖表標題
+- `snapshotMode`: 快照模式 (`static`, `dynamic`, `cached`)
+- `cacheExpireMinutes`: 快取過期時間（分鐘，僅 cached 模式使用）
+- `isDemo`: 是否為示範資料
 
 **請求範例**:
 
 ```bash
-curl -X POST http://localhost:3001/api/snapshots \
+curl -X POST http://localhost:3001/api/snapshots/query \
   -H "Content-Type: application/json" \
   -d '{
-    "data": [
-      {
-        "x": "產品A",
-        "y": 15000,
-        "label": "產品A",
-        "aggregateFunction": "SUM",
-        "originalCount": 4,
-        "valueCount": 4
-      },
-      {
-        "x": "產品B",
-        "y": 12000,
-        "label": "產品B",
-        "aggregateFunction": "SUM",
-        "originalCount": 2,
-        "valueCount": 2
-      }
-    ],
+    "databaseId": "abc123-def456-ghi789",
+    "notionToken": "secret_1234567890abcdef",
+    "xProperty": "Name",
+    "yProperty": "Amount",
     "chartType": "bar",
     "aggregateFunction": "SUM",
-    "title": "產品銷售統計",
+    "title": "動態銷售統計圖",
+    "snapshotMode": "dynamic",
     "isDemo": false
   }'
 ```
@@ -279,83 +274,102 @@ curl -X POST http://localhost:3001/api/snapshots \
 
 ```json
 {
-  "id": "chart_1690000000000_abc123",
-  "message": "Snapshot saved successfully",
-  "timestamp": 1690000000000
+  "id": "query_1753784442310_240887d1",
+  "message": "Query snapshot saved successfully",
+  "timestamp": 1753784442310,
+  "snapshotMode": "dynamic"
 }
 ```
 
-### 2. 讀取快照
+### 2. 執行動態查詢快照
 
-**端點**: `GET /api/snapshots/{id}`
+**端點**: `GET /api/snapshots/query/:id`
 
-**描述**: 根據 ID 讀取快照資料
+**描述**: 執行動態查詢快照，根據快照模式回傳資料
+
+**路徑參數**:
+
+- `id`: 動態快照 ID
 
 **請求範例**:
 
 ```bash
-curl -X GET http://localhost:3001/api/snapshots/chart_1690000000000_abc123
+curl -X GET http://localhost:3001/api/snapshots/query/query_1753784442310_240887d1
 ```
 
 **成功回應** (200):
 
 ```json
 {
-  "id": "chart_1690000000000_abc123",
+  "id": "query_1753784442310_240887d1",
   "data": [
     {
       "x": "產品A",
-      "y": 15000,
+      "y": 1250,
       "label": "產品A",
       "aggregateFunction": "SUM",
-      "originalCount": 4,
-      "valueCount": 4
+      "originalCount": 15,
+      "valueCount": 15
+    },
+    {
+      "x": "產品B",
+      "y": 980,
+      "label": "產品B",
+      "aggregateFunction": "SUM",
+      "originalCount": 12,
+      "valueCount": 12
     }
   ],
   "chartType": "bar",
   "aggregateFunction": "SUM",
-  "title": "產品銷售統計",
+  "title": "動態銷售統計圖",
   "isDemo": false,
-  "timestamp": 1690000000000,
-  "createdAt": "2025-07-29T10:00:00.000Z"
+  "timestamp": 1753784500000,
+  "createdAt": "2024-01-01T10:30:00.000Z"
 }
 ```
 
-**錯誤回應** (404):
+### 3. 取得動態查詢快照設定
 
-```json
-{
-  "error": "Snapshot not found",
-  "code": "SNAPSHOT_NOT_FOUND"
-}
-```
+**端點**: `GET /api/snapshots/query/:id/config`
 
-### 3. 清理過期快照
+**描述**: 取得動態快照的設定資訊（不包含敏感資料）
 
-**端點**: `DELETE /api/snapshots/cleanup`
+**路徑參數**:
 
-**描述**: 清理超過指定天數的快照檔案
-
-**查詢參數**:
-
-- `days`: 保留天數，預設為 7 天
+- `id`: 動態快照 ID
 
 **請求範例**:
 
 ```bash
-curl -X DELETE "http://localhost:3001/api/snapshots/cleanup?days=7"
+curl -X GET http://localhost:3001/api/snapshots/query/query_1753784442310_240887d1/config
 ```
 
 **成功回應** (200):
 
 ```json
 {
-  "message": "Cleanup completed",
-  "deletedCount": 15,
-  "errorCount": 0,
-  "retentionDays": 7
+  "id": "query_1753784442310_240887d1",
+  "databaseId": "abc123-def456-ghi789",
+  "xProperty": "Name",
+  "yProperty": "Amount",
+  "chartType": "bar",
+  "aggregateFunction": "SUM",
+  "title": "動態銷售統計圖",
+  "snapshotMode": "dynamic",
+  "cacheExpireMinutes": 60,
+  "isDemo": false,
+  "timestamp": 1753784442310,
+  "createdAt": "2024-01-01T10:25:42.310Z",
+  "lastUpdated": "2024-01-01T10:30:00.000Z"
 }
 ```
+
+**快照模式說明**:
+
+- `static`: 靜態快照，資料固定不變
+- `dynamic`: 動態快照，每次查詢都從 Notion API 取得最新資料
+- `cached`: 快取快照，定時更新資料快取
 
 ---
 

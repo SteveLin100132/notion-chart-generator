@@ -51,20 +51,29 @@ export const notionApi = {
 };
 
 export const snapshotApi = {
-  // 保存快照
-  async saveSnapshot(data: {
-    data: ChartData[];
+  // 保存動態查詢快照
+  async saveQuerySnapshot(data: {
+    databaseId: string;
+    notionToken: string;
+    xProperty: string;
+    yProperty: string;
     chartType: string;
     aggregateFunction: string;
     title: string;
+    snapshotMode?: "dynamic";
     isDemo?: boolean;
-  }): Promise<{ id: string; message: string; timestamp: number }> {
-    const response = await api.post("/snapshots", data);
+  }): Promise<{
+    id: string;
+    message: string;
+    timestamp: number;
+    snapshotMode: string;
+  }> {
+    const response = await api.post("/snapshots/query", data);
     return response.data;
   },
 
-  // 獲取快照
-  async getSnapshot(id: string): Promise<{
+  // 執行動態查詢快照（獲取即時資料）
+  async executeQuerySnapshot(id: string): Promise<{
     id: string;
     data: ChartData[];
     chartType: string;
@@ -73,8 +82,28 @@ export const snapshotApi = {
     isDemo: boolean;
     timestamp: number;
     createdAt: string;
+    rawData?: any[]; // 添加原始資料欄位
   }> {
-    const response = await api.get(`/snapshots/${id}`);
+    const response = await api.get(`/snapshots/query/${id}`);
+    return response.data;
+  },
+
+  // 獲取動態查詢快照設定
+  async getQuerySnapshotConfig(id: string): Promise<{
+    id: string;
+    databaseId: string;
+    xProperty: string;
+    yProperty: string;
+    chartType: string;
+    aggregateFunction: string;
+    title: string;
+    snapshotMode: "dynamic";
+    isDemo: boolean;
+    timestamp: number;
+    createdAt: string;
+    lastUpdated?: string;
+  }> {
+    const response = await api.get(`/snapshots/query/${id}/config`);
     return response.data;
   },
 };

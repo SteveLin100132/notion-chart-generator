@@ -145,7 +145,60 @@ npm run test         # 測試
 5. 優化效能和錯誤處理
 6. 添加測試用例
 
-## 📞 技術支援
+## � 動態快照系統開發
+
+### 環境設定
+
+在後端 `.env` 檔案中添加加密密鑰：
+
+```bash
+# 加密配置
+ENCRYPTION_KEY=your-strong-secret-key-here-min-32-chars
+```
+
+### 開發重點
+
+1. **Token 安全性**
+
+   - Notion API Token 使用 AES-256-CBC 加密
+   - 生產環境務必設定強度足夠的 `ENCRYPTION_KEY`
+
+2. **快照模式**
+
+   - `static`: 傳統靜態快照
+   - `dynamic`: 即時查詢 Notion API
+   - `cached`: 快取機制平衡效能與即時性
+
+3. **錯誤處理**
+   - 動態快照失敗時自動回退到靜態模式
+   - 完整的錯誤日誌記錄
+
+### API 開發
+
+新增的 API 端點：
+
+- `POST /api/snapshots/query` - 建立動態快照
+- `GET /api/snapshots/query/:id` - 執行動態查詢
+- `GET /api/snapshots/query/:id/config` - 取得快照設定
+
+### 前端整合
+
+動態快照相關的前端組件：
+
+- 快照模式選擇器
+- 快取時間設定
+- 自動回退機制
+
+### 待實作功能
+
+- [ ] Notion API 實際整合
+- [ ] 進階快取策略
+- [ ] 批量快照操作
+- [ ] 快照使用統計
+
+詳細說明請參考 `docs/DYNAMIC-SNAPSHOTS.md`
+
+## �📞 技術支援
 
 如果遇到問題，請檢查：
 
@@ -153,3 +206,4 @@ npm run test         # 測試
 2. 依賴是否正確安裝
 3. 環境變數是否設定
 4. Notion Token 是否有效
+5. 動態快照系統的加密密鑰設定
