@@ -132,11 +132,52 @@ export class NotionService {
 
       // 轉換屬性資料為簡化格式
       const properties = Object.entries(response.data.properties || {}).map(
-        ([name, property]: [string, any]) => ({
-          name,
-          type: property.type,
-          id: property.id || name,
-        }),
+        ([name, property]: [string, any]) => {
+          const baseProperty = {
+            name,
+            type: property.type,
+            id: property.id || name,
+          };
+
+          // 為 select、multi_select 和 status 類型添加選項
+          if (property.type === 'select' && property.select?.options) {
+            return {
+              ...baseProperty,
+              options: property.select.options.map((option: any) => ({
+                name: option.name,
+                id: option.id,
+                color: option.color,
+              })),
+            };
+          }
+
+          if (
+            property.type === 'multi_select' &&
+            property.multi_select?.options
+          ) {
+            return {
+              ...baseProperty,
+              options: property.multi_select.options.map((option: any) => ({
+                name: option.name,
+                id: option.id,
+                color: option.color,
+              })),
+            };
+          }
+
+          if (property.type === 'status' && property.status?.options) {
+            return {
+              ...baseProperty,
+              options: property.status.options.map((option: any) => ({
+                name: option.name,
+                id: option.id,
+                color: option.color,
+              })),
+            };
+          }
+
+          return baseProperty;
+        },
       );
 
       return {

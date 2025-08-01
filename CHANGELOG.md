@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-08-02
+
+### Added
+
+- **進階篩選功能 (Query Builder)**
+  - 新增 Query Builder 組件，支援複雜篩選條件建構
+  - 支援多重篩選組合，每組內可設定多個條件
+  - 支援 AND/OR 邏輯運算符組合篩選條件
+  - **嵌套子群組支援** - 實現無限層級的篩選群組嵌套，完全匹配 Notion 原生篩選介面
+  - **Badge 風格選項** - 篩選條件值採用 Badge 樣式呈現，與資料表格風格一致
+  - **Notion 官方色彩系統** - 使用 Notion 官方色彩搭配，確保視覺一致性
+  - 根據 Notion 屬性類型提供適合的運算符：
+    - **數字類型**: 等於(=)、不等於(≠)、大於(>)、小於(<)、大於等於(≥)、小於等於(≤)、為空、不為空
+    - **文字類型**: 等於、不等於、包含、不包含、開始於、結束於、為空、不為空
+    - **選擇類型**: 等於、不等於、為空、不為空
+    - **多選類型**: 包含、不包含、為空、不為空
+    - **日期類型**: 等於、不等於、之前、之後、上週、本週、下週、上月、本月、下月、為空、不為空
+    - **布林類型**: 等於、不等於
+  - 視覺化篩選條件建構器，支援動態新增/刪除條件組
+  - **遞歸渲染系統** - 支援嵌套群組的遞歸渲染和管理
+  - 自動轉換篩選條件為 Notion API 格式，包含嵌套結構處理
+
+### Enhanced
+
+- **動態快照系統**
+
+  - 後端 API 新增 `filters` 參數支援
+  - `CreateQuerySnapshotDto` 新增篩選條件欄位
+  - `QuerySnapshot` interface 支援篩選條件儲存
+  - 查詢執行時自動套用儲存的篩選條件
+
+- **前端狀態管理**
+
+  - Zustand store 新增篩選條件管理功能
+  - 新增 `FilterGroup` 和 `FilterCondition` 類型定義，支援嵌套結構
+  - 提供完整的篩選群組操作方法：
+    - `addFilterGroup`、`removeFilterGroup`、`updateFilterGroup` - 主群組管理
+    - `addSubgroupToGroup`、`removeSubgroupFromGroup` - 子群組管理
+    - `updateSubgroupLogicalOperator` - 子群組邏輯運算符管理
+    - `addConditionToSubgroup`、`removeConditionFromSubgroup` - 子群組條件管理
+
+- **Query Builder 架構升級**
+
+  - **遞歸群組管理** - 實現支援無限層級嵌套的篩選群組系統
+  - **智能 UI 適應** - 子群組採用不同視覺樣式（淺灰背景、左側縮排）
+  - **Notion 風格整合** - 按鈕定位和互動行為完全匹配 Notion 原生介面
+  - **類型安全保證** - 完整的 TypeScript 類型定義和編譯時檢查
+
+- **設定面板改進**
+  - 整合 Query Builder 到圖表設定面板
+  - 新增篩選條件區塊，支援進階篩選設定
+  - 改善用戶體驗，提供直觀的篩選條件管理介面
+  - **響應式設計** - 支援各種螢幕尺寸的篩選介面顯示
+
 ## [1.0.9] - 2025-08-01
 
 ### Changed

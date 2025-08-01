@@ -67,6 +67,8 @@ export interface QuerySnapshot {
   createdAt: string;
   /** 最後更新時間 (ISO 字串格式) */
   lastUpdated?: string;
+  /** 篩選條件 (可選) */
+  filters?: any;
 }
 
 /**
@@ -102,7 +104,6 @@ export class SnapshotService {
   /**
    * 確保快照目錄存在
    * 如果目錄不存在，會遞迴建立所需的目錄結構
-   * @private
    */
   private async ensureSnapshotDir() {
     try {
@@ -115,7 +116,6 @@ export class SnapshotService {
   /**
    * 確保動態快照目錄存在
    * 如果目錄不存在，會遞迴建立所需的目錄結構
-   * @private
    */
   private async ensureQuerySnapshotDir() {
     try {
@@ -128,7 +128,8 @@ export class SnapshotService {
   /**
    * 加密 API Token
    * 使用 AES-256-CBC 演算法對敏感資料進行加密
-   * @private
+   *
+   * @param token - 要加密的 API Token
    */
   private encryptToken(token: string): string {
     const algorithm = 'aes-256-cbc';
@@ -146,7 +147,8 @@ export class SnapshotService {
   /**
    * 解密 API Token
    * 解密先前加密的 API Token
-   * @private
+   *
+   * @param encryptedToken - 加密的 API Token
    */
   private decryptToken(encryptedToken: string): string {
     const algorithm = 'aes-256-cbc';
@@ -175,7 +177,14 @@ export class SnapshotService {
    * @param dto - 建立動態快照所需的資料傳輸物件
    * @returns 包含快照 ID、成功訊息和時間戳記的回應物件
    */
-  async createQuerySnapshot(dto: CreateQuerySnapshotDto) {
+  async createQuerySnapshot(
+    dto: CreateQuerySnapshotDto,
+  ): Promise<{
+    id: string;
+    message: string;
+    timestamp: number;
+    snapshotMode: string;
+  }> {
     const timestamp = Date.now();
     // 產生格式為 "query_{timestamp}_{8位隨機碼}" 的唯一 ID
     const id = `query_${timestamp}_${uuidv4().substring(0, 8)}`;
@@ -194,6 +203,7 @@ export class SnapshotService {
       isDemo: dto.isDemo || false,
       timestamp,
       createdAt: new Date().toISOString(),
+      filters: dto.filters,
     };
 
     // 將動態快照寫入 JSON 檔案
@@ -252,6 +262,7 @@ export class SnapshotService {
             querySnapshot.xProperty,
             querySnapshot.yProperty,
             querySnapshot.aggregateFunction,
+            querySnapshot.filters, // 傳遞篩選條件
           );
 
         // 返回標準快照格式，並包含原始資料
@@ -285,6 +296,7 @@ export class SnapshotService {
    * @param xProperty - X 軸屬性名稱
    * @param yProperty - Y 軸屬性名稱
    * @param aggregateFunction - 聚合函數
+   * @param filters - 篩選條件 (可選)
    * @returns 處理後的圖表資料
    * @private
    */
@@ -294,6 +306,7 @@ export class SnapshotService {
     xProperty: string,
     yProperty: string,
     aggregateFunction: string,
+    filters?: any,
   ): Promise<any[]> {
     try {
       console.log('Querying Notion database:', {
@@ -301,6 +314,7 @@ export class SnapshotService {
         xProperty,
         yProperty,
         aggregateFunction,
+        filters: filters ? 'Applied' : 'None',
       });
 
       // 查詢資料庫資料 - 獲取所有資料
@@ -312,7 +326,7 @@ export class SnapshotService {
         const response = await this.notionService.queryDatabase(
           token,
           databaseId,
-          undefined, // filter
+          filters, // 使用傳入的篩選條件
           100, // pageSize
           nextCursor,
         );
@@ -359,6 +373,7 @@ export class SnapshotService {
    * @param xProperty - X 軸屬性名稱
    * @param yProperty - Y 軸屬性名稱
    * @param aggregateFunction - 聚合函數
+   * @param filters - 篩選條件 (可選)
    * @returns 包含處理後圖表資料和原始資料的物件
    * @private
    */
@@ -368,6 +383,7 @@ export class SnapshotService {
     xProperty: string,
     yProperty: string,
     aggregateFunction: string,
+    filters?: any,
   ): Promise<{ processedData: any[]; rawData: any[] }> {
     try {
       console.log('Querying Notion database with raw data:', {
@@ -375,7 +391,13 @@ export class SnapshotService {
         xProperty,
         yProperty,
         aggregateFunction,
+        filters: filters ? 'Applied' : 'None',
       });
+
+      // 記錄篩選條件的詳細資訊
+      if (filters) {
+        console.log('Filter details:', JSON.stringify(filters, null, 2));
+      }
 
       // 查詢資料庫資料 - 獲取所有資料
       let allData: any[] = [];
@@ -386,7 +408,7 @@ export class SnapshotService {
         const response = await this.notionService.queryDatabase(
           token,
           databaseId,
-          undefined, // filter
+          filters, // 使用傳入的篩選條件
           100, // pageSize
           nextCursor,
         );

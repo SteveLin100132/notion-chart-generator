@@ -62,6 +62,7 @@ export const snapshotApi = {
     title: string;
     snapshotMode?: "dynamic";
     isDemo?: boolean;
+    filters?: any;
   }): Promise<{
     id: string;
     message: string;
