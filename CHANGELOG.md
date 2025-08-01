@@ -5,13 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.9] - 2025-08-01
+
+### Changed
+
+- **快照系統重構** - 簡化為純動態快照架構
+  - **BREAKING CHANGE**: 移除靜態快照和快取快照模式
+  - 統一使用動態快照，確保資料即時性
+  - 移除複雜的快照模式選擇器，提升用戶體驗
+  - 簡化分享機制，所有分享連結統一使用動態快照
+
+### Removed
+
+- **移除靜態快照功能**
+
+  - 移除後端 API 端點：
+    - `POST /api/snapshots` - 創建靜態快照
+    - `GET /api/snapshots/:id` - 獲取靜態快照
+    - `DELETE /api/snapshots/cleanup` - 清理過期快照
+  - 移除前端靜態快照相關組件和邏輯
+  - 移除 `CreateSnapshotDto` 資料傳輸物件
+  - 移除快照模式選擇器 UI
+
+- **移除快取快照功能**
+  - 完全移除快取快照模式及相關代碼
+  - 簡化快照類型定義
+
+### Enhanced
+
+- **分享功能優化**
+
+  - 統一分享連結格式：`?query=query_xxxxx&embed=true`
+  - 移除靜態快照分享選項，簡化用戶選擇
+  - 所有分享連結自動使用最新的 Notion 資料
+
+- **頁面載入優化**
+  - 專注於動態快照載入：`?query=query_xxxxx`
+  - 移除靜態快照 URL 參數支援
+  - 簡化 URL 處理邏輯
 
 ### Added
 
 - **動態快照功能** - 全新的即時資料同步解決方案
-  - 新增動態快照模式，解決 Notion 資料庫更新後圖表內容不同步的問題
-  - 三種快照模式支援：靜態 (static)、動態 (dynamic)、快取 (cached)
   - 動態快照 API 端點：
     - `POST /api/snapshots/query` - 創建動態快照
     - `GET /api/snapshots/query/:id` - 執行動態快照查詢（獲取即時資料）
@@ -19,20 +54,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - API Token 安全加密儲存 (AES-256-CBC)
   - 支援大型資料庫的分頁查詢
   - 完整的錯誤處理和回退機制
-
-### Enhanced
-
-- **分享功能升級**
-
-  - 智能分享：自動判斷創建動態快照或靜態快照
-  - 支援動態快照分享連結格式：`?query=query_xxxxx&embed=true`
-  - 分享連結自動使用最新的 Notion 資料
-  - 回退機制：動態快照失敗時自動切換到靜態模式
-
-- **頁面載入支援**
-  - 支援靜態快照載入：`?snapshot=chart_xxxxx`
-  - 支援動態快照載入：`?query=query_xxxxx`
-  - 動態快照自動執行最新的 Notion 查詢
 
 ### Improved
 

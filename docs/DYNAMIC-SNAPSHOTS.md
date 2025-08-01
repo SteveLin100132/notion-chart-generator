@@ -2,30 +2,27 @@
 
 ## 概述
 
-動態快照系統是 Notion Chart Generator 的核心功能之一，解決了傳統靜態快照無法即時反映 Notion 資料庫更新的問題。系統提供三種快照模式，讓使用者可以根據需求選擇最適合的資料同步策略。
+動態快照系統是 Notion Chart Generator 的核心功能，提供即時資料同步解決方案。與傳統靜態快照不同，動態快照儲存查詢參數而非靜態資料，確保每次載入都能獲取 Notion 資料庫的最新內容。
 
-## 快照模式
+## 系統特點
 
-### 1. 靜態快照 (Static)
+### 即時資料同步
 
-- **特點**: 將當前資料庫資料儲存為靜態檔案
-- **優點**: 載入速度快，不依賴外部 API，資料穩定
-- **缺點**: 資料不會自動更新，需要手動重新生成
-- **適用場景**: 報告製作、資料歸檔、網路不穩定環境
+- **即時更新**: 每次檢視都會從 Notion API 取得最新資料
+- **資料一致性**: 圖表始終反映資料庫的當前狀態
+- **自動同步**: 無需手動重新生成快照
 
-### 2. 動態快照 (Dynamic)
+### 安全性保障
 
-- **特點**: 每次檢視都會從 Notion API 取得最新資料
-- **優點**: 資料始終為最新，即時反映資料庫變更
-- **缺點**: 載入時間較長，依賴網路連線，API 請求次數較多
-- **適用場景**: 即時監控面板、實時報表、重要資料追蹤
+- **Token 加密**: 使用 AES-256-CBC 加密儲存 API Token
+- **隱私保護**: 僅儲存查詢參數，不儲存實際資料
+- **隨機 ID**: 使用時間戳和 UUID 生成唯一快照 ID
 
-### 3. 快取快照 (Cached)
+### 分享便利性
 
-- **特點**: 定時從 Notion API 更新資料快取
-- **優點**: 平衡效能與即時性，可自訂快取過期時間
-- **缺點**: 資料可能有延遲，需要額外的快取管理
-- **適用場景**: 一般業務報表、定期更新的儀表板
+- **永久連結**: 分享連結始終顯示最新資料
+- **嵌入支援**: 支援 iframe 嵌入外部網站
+- **跨平台相容**: 響應式設計，支援各種設備
 
 ## 技術架構
 
@@ -33,32 +30,20 @@
 
 ```
 SnapshotService
-├── Static Snapshots (傳統靜態檔案)
 └── Query Snapshots (動態查詢參數)
     ├── 加密的 API Token 儲存
     ├── 查詢參數儲存
-    └── 快取機制
+    └── 即時資料查詢
 ```
 
 ### 資料流程
 
-#### 靜態模式
+#### 動態快照流程
 
 ```
-用戶請求 → 查詢 Notion API → 處理資料 → 儲存快照檔案 → 回傳結果
-```
-
-#### 動態模式
-
-```
-用戶請求 → 儲存查詢參數 → 即時查詢 Notion API → 處理資料 → 回傳結果
-```
-
-#### 快取模式
-
-```
-用戶請求 → 檢查快取 → [過期] 查詢 Notion API → 更新快取 → 回傳結果
-         └── [未過期] 直接回傳快取資料
+用戶請求 → 儲存查詢參數 → 生成快照 ID → 回傳成功訊息
+                ↓
+載入快照 → 讀取查詢參數 → 解密 Token → 即時查詢 Notion API → 處理資料 → 回傳結果
 ```
 
 ## API 端點
@@ -77,8 +62,7 @@ Content-Type: application/json
   "chartType": "bar",
   "aggregateFunction": "sum",
   "title": "動態銷售統計圖",
-  "snapshotMode": "dynamic",
-  "cacheExpireMinutes": 60
+  "snapshotMode": "dynamic"
 }
 ```
 
@@ -123,17 +107,7 @@ ENCRYPTION_KEY=your-strong-secret-key-here-min-32-chars
 </Select>
 ```
 
-2. **快取時間設定** (僅快取模式)
-
-```tsx
-<Input
-  type="number"
-  value={cacheExpireMinutes}
-  onChange={(e) => setCacheExpireMinutes(parseInt(e.target.value))}
-/>
-```
-
-3. **建立動態快照**
+2. **建立動態快照**
 
 ```typescript
 const response = await snapshotApi.saveQuerySnapshot({
@@ -144,67 +118,99 @@ const response = await snapshotApi.saveQuerySnapshot({
   chartType: chartType,
   aggregateFunction: aggregateFunction,
   title: chartTitle,
-  snapshotMode: snapshotMode,
-  cacheExpireMinutes: cacheExpireMinutes,
+  snapshotMode: "dynamic",
 });
+```
+
+3. **執行動態快照**
+
+```typescript
+const snapshot = await snapshotApi.executeQuerySnapshot(queryId);
+// snapshot.data 包含圖表資料
+// snapshot.rawData 包含完整的資料庫資料
 ```
 
 ## 效能考量
 
 ### 建議設定
 
-| 使用場景 | 建議模式 | 快取時間     | 說明             |
-| -------- | -------- | ------------ | ---------------- |
-| 實時監控 | Dynamic  | -            | 資料即時性最重要 |
-| 業務報表 | Cached   | 15-60 分鐘   | 平衡效能與即時性 |
-| 歷史分析 | Static   | -            | 資料穩定性最重要 |
-| 公開展示 | Cached   | 60-1440 分鐘 | 減少 API 使用量  |
+| 使用場景     | 載入時間 | 說明               |
+| ------------ | -------- | ------------------ | ---------------- |
+| 實時監控     | Dynamic  | -                  | 資料即時性最重要 |
+| 即時監控面板 | 1-3 秒   | 始終顯示最新資料   |
+| 業務報表     | 1-3 秒   | 每次檢視都是最新   |
+| 歷史分析     | 1-3 秒   | 資料即時性最重要   |
+| 公開展示     | 1-3 秒   | 分享的資料始終最新 |
 
 ### 效能最佳化
 
-- 快取模式可大幅減少 Notion API 請求次數
-- 合適的快取時間設定可平衡效能與資料新鮮度
-- 靜態模式適合不常變動的資料或網路受限環境
+- 動態快照確保資料始終為最新
+- 分頁查詢支援大型資料庫
+- 網路請求優化減少載入時間
+- Token 加密儲存保障安全性
 
 ## 錯誤處理
 
-### 自動回退機制
+### 容錯機制
 
-當動態快照失敗時，系統會自動回退到靜態模式：
+動態快照系統提供完善的錯誤處理：
 
 ```typescript
 try {
-  // 嘗試建立動態快照
-  await generateDynamicChart();
+  // 執行動態快照查詢
+  const snapshot = await snapshotApi.executeQuerySnapshot(queryId);
 } catch (error) {
-  // 回退到靜態模式
-  console.log("回退到靜態模式...");
-  await generateStaticChart();
+  console.error("動態快照載入失敗:", error);
+  // 顯示錯誤訊息給用戶
+  setError("無法載入最新資料，請檢查網路連線或稍後再試");
 }
 ```
 
 ### 常見錯誤
 
-- **Token 加密失敗**: 檢查 `ENCRYPTION_KEY` 環境變數
+- **Token 解密失敗**: 檢查 `ENCRYPTION_KEY` 環境變數
 - **Notion API 請求失敗**: 檢查 Token 權限和資料庫存取權限
 - **快照檔案讀取失敗**: 檢查檔案系統權限和儲存空間
+- **網路連線問題**: 確保伺服器可以存取 Notion API
+
+## 分享功能
+
+### 分享連結格式
+
+動態快照的分享連結使用查詢參數格式：
+
+```
+https://your-domain.com/?query=query_1753784442310_240887d1&embed=true
+```
+
+### iframe 嵌入
+
+```html
+<iframe
+  src="https://your-domain.com/?query=query_1753784442310_240887d1&embed=true"
+  width="800"
+  height="600"
+  frameborder="0"
+>
+</iframe>
+```
 
 ## 未來功能
 
-### 計劃中的功能
+### 已實現功能
 
-- [ ] Notion API 整合實作
-- [ ] 進階快取策略 (LRU, TTL)
-- [ ] 批量快照操作
-- [ ] 快照分析和使用統計
-- [ ] 自動快取清理機制
+- [x] 動態快照核心功能
+- [x] Token 加密儲存
+- [x] 分享功能整合
+- [x] 錯誤處理機制
+- [x] 即時資料同步
 
 ### 可能的擴展
 
-- Webhook 支援即時更新
+- Webhook 支援即時更新通知
 - 多資料來源整合 (除了 Notion 之外)
 - 分散式快取支援
-- 快照版本控制
+- 快照使用統計和分析
 
 ## 故障排除
 
