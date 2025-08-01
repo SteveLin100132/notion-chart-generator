@@ -13,7 +13,7 @@ import { NotionChartLogo } from '@/components/ui/notion-chart-logo'
 import { BarChart } from 'lucide-react'
 
 export default function Home() {
-  const { chartData, chartType, rawDatabaseData, setChartData, setChartType, setAggregateFunction, setCurrentSnapshotId } = useNotionStore()
+  const { chartData, chartType, rawDatabaseData, setChartData, setChartType, setAggregateFunction, setCurrentSnapshotId, setRawDatabaseData } = useNotionStore()
   const [isEmbedMode, setIsEmbedMode] = React.useState(false)
   const [currentView, setCurrentView] = React.useState<'chart' | 'data'>('chart')
   const chartRef = React.useRef<ChartRendererRef>(null)
@@ -24,10 +24,12 @@ export default function Home() {
       setChartData(snapshot.data)
       setChartType(snapshot.chartType as any)
       setAggregateFunction(snapshot.aggregateFunction as any)
+      // 設置原始資料，如果不存在則設為空陣列
+      setRawDatabaseData(snapshot.rawData || [])
     } catch (error) {
       console.error('載入快照失敗:', error)
     }
-  }, [setChartData, setChartType, setAggregateFunction])
+  }, [setChartData, setChartType, setAggregateFunction, setRawDatabaseData])
 
   const loadQuerySnapshot = React.useCallback(async (queryId: string) => {
     try {
@@ -37,11 +39,15 @@ export default function Home() {
       setChartType(snapshot.chartType as any)
       setAggregateFunction(snapshot.aggregateFunction as any)
       setCurrentSnapshotId(queryId)
+      // 設置原始資料庫資料供資料表格使用
+      if (snapshot.rawData) {
+        setRawDatabaseData(snapshot.rawData)
+      }
       console.log('動態快照載入成功:', snapshot)
     } catch (error) {
       console.error('載入動態快照失敗:', error)
     }
-  }, [setChartData, setChartType, setAggregateFunction, setCurrentSnapshotId])
+  }, [setChartData, setChartType, setAggregateFunction, setCurrentSnapshotId, setRawDatabaseData])
 
   // 檢查是否有分享連結參數
   useEffect(() => {
@@ -117,10 +123,28 @@ export default function Home() {
                 />
               </div>
             ) : (
-              <DataTable
-                data={rawDatabaseData}
-                className="h-full"
-              />
+              rawDatabaseData.length > 0 ? (
+                <DataTable
+                  data={rawDatabaseData}
+                  className="h-full"
+                />
+              ) : (
+                <div className="h-full flex items-center justify-center bg-white rounded-lg border border-gray-200">
+                  <div className="text-center">
+                    <div className="mb-4 flex justify-center">
+                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">無資料表格資料</h3>
+                    <p className="text-gray-600 max-w-md">
+                      此快照沒有包含原始資料庫資料。請重新創建快照以包含完整的資料表格功能。
+                    </p>
+                  </div>
+                </div>
+              )
             )
           ) : (
             <div className="h-full flex items-center justify-center bg-white rounded-lg border border-gray-200">

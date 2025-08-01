@@ -32,6 +32,8 @@ export interface Snapshot {
   timestamp: number;
   /** 建立日期 (ISO 字串格式) */
   createdAt: string;
+  /** 原始資料庫資料（用於資料表格顯示） */
+  rawData?: any[];
 }
 
 /**
@@ -190,6 +192,7 @@ export class SnapshotService {
       isDemo: dto.isDemo || false,
       timestamp,
       createdAt: new Date().toISOString(),
+      rawData: dto.rawData || [], // 包含原始資料
     };
 
     // 將快照寫入 JSON 檔案
@@ -337,7 +340,7 @@ export class SnapshotService {
    * 根據快照模式決定是否使用快取或即時查詢 Notion API
    *
    * @param id - 動態快照的唯一識別碼
-   * @returns 包含圖表資料的標準快照格式
+   * @returns 包含圖表資料和原始資料的標準快照格式
    * @throws NotFoundException - 當快照不存在時拋出
    */
   async executeQuerySnapshot(id: string): Promise<Snapshot> {
@@ -364,15 +367,15 @@ export class SnapshotService {
         // 解密 API Token
         const notionToken = this.decryptToken(querySnapshot.encryptedToken);
 
-        // TODO: 實作 Notion API 查詢邏輯
-        // 這裡需要調用 Notion API 取得最新資料
-        const freshData = await this.queryNotionDatabase(
-          querySnapshot.databaseId,
-          notionToken,
-          querySnapshot.xProperty,
-          querySnapshot.yProperty,
-          querySnapshot.aggregateFunction,
-        );
+        // 查詢 Notion 資料庫並取得原始資料和處理後資料
+        const { processedData, rawData } =
+          await this.queryNotionDatabaseWithRaw(
+            querySnapshot.databaseId,
+            notionToken,
+            querySnapshot.xProperty,
+            querySnapshot.yProperty,
+            querySnapshot.aggregateFunction,
+          );
 
         // 如果是快取模式，更新快取
         if (querySnapshot.snapshotMode === 'cached') {
@@ -381,16 +384,17 @@ export class SnapshotService {
           await fs.writeFile(filePath, JSON.stringify(querySnapshot, null, 2));
         }
 
-        // 返回標準快照格式
+        // 返回標準快照格式，並包含原始資料
         return {
           id: querySnapshot.id,
-          data: freshData,
+          data: processedData,
           chartType: querySnapshot.chartType,
           aggregateFunction: querySnapshot.aggregateFunction,
           title: querySnapshot.title,
           isDemo: querySnapshot.isDemo,
           timestamp: Date.now(),
           createdAt: new Date().toISOString(),
+          rawData: rawData, // 包含原始資料
         };
       } catch (error) {
         console.error('Query snapshot execution error:', error);
@@ -472,6 +476,82 @@ export class SnapshotService {
       return processedData;
     } catch (error) {
       console.error('Error querying Notion database:', error);
+      throw new Error(`Failed to query Notion database: ${error.message}`);
+    }
+  }
+
+  /**
+   * 查詢 Notion 資料庫並返回原始資料和處理後資料
+   * 呼叫 Notion API 取得最新的資料庫內容，同時返回原始資料供資料表格使用
+   *
+   * @param databaseId - Notion 資料庫 ID
+   * @param token - Notion API Token
+   * @param xProperty - X 軸屬性名稱
+   * @param yProperty - Y 軸屬性名稱
+   * @param aggregateFunction - 聚合函數
+   * @returns 包含處理後圖表資料和原始資料的物件
+   * @private
+   */
+  private async queryNotionDatabaseWithRaw(
+    databaseId: string,
+    token: string,
+    xProperty: string,
+    yProperty: string,
+    aggregateFunction: string,
+  ): Promise<{ processedData: any[]; rawData: any[] }> {
+    try {
+      console.log('Querying Notion database with raw data:', {
+        databaseId,
+        xProperty,
+        yProperty,
+        aggregateFunction,
+      });
+
+      // 查詢資料庫資料 - 獲取所有資料
+      let allData: any[] = [];
+      let hasMore = true;
+      let nextCursor: string | null = null;
+
+      while (hasMore) {
+        const response = await this.notionService.queryDatabase(
+          token,
+          databaseId,
+          undefined, // filter
+          100, // pageSize
+          nextCursor,
+        );
+
+        allData = [...allData, ...response.results];
+        hasMore = response.has_more;
+        nextCursor = response.next_cursor;
+
+        console.log(
+          `Fetched ${response.results.length} records, total: ${allData.length}`,
+        );
+      }
+
+      console.log(`Total records fetched: ${allData.length}`);
+
+      if (allData.length === 0) {
+        console.warn('No data found in database');
+        return { processedData: [], rawData: [] };
+      }
+
+      // 處理資料
+      const processedData = this.processNotionData(
+        allData,
+        xProperty,
+        yProperty,
+        '', // labelProperty 暫時為空
+        aggregateFunction,
+      );
+
+      console.log(`Processed data: ${processedData.length} items`);
+      console.log(`Raw data: ${allData.length} items`);
+
+      return { processedData, rawData: allData };
+    } catch (error) {
+      console.error('Error querying Notion database with raw data:', error);
       throw new Error(`Failed to query Notion database: ${error.message}`);
     }
   }

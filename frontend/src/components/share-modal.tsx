@@ -24,7 +24,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({ chartTitle = '圖表' })
     selectedDatabase,
     xAxisProperty,
     yAxisProperty,
-    snapshotMode
+    snapshotMode,
+    rawDatabaseData // 添加原始資料
   } = useNotionStore()
   const [isSharing, setIsSharing] = useState(false)
   const [copiedUrl, setCopiedUrl] = useState(false)
@@ -71,6 +72,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ chartTitle = '圖表' })
           aggregateFunction,
           title: chartTitle,
           isDemo: false,
+          rawData: rawDatabaseData, // 包含原始資料
         })
         snapshotId = response.id
         console.log('靜態快照創建成功:', snapshotId)

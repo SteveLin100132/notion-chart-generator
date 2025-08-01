@@ -58,6 +58,7 @@ export const snapshotApi = {
     aggregateFunction: string;
     title: string;
     isDemo?: boolean;
+    rawData?: any[]; // 添加原始資料欄位
   }): Promise<{ id: string; message: string; timestamp: number }> {
     const response = await api.post("/snapshots", data);
     return response.data;
@@ -73,6 +74,7 @@ export const snapshotApi = {
     isDemo: boolean;
     timestamp: number;
     createdAt: string;
+    rawData?: any[]; // 添加原始資料欄位
   }> {
     const response = await api.get(`/snapshots/${id}`);
     return response.data;
@@ -110,6 +112,7 @@ export const snapshotApi = {
     isDemo: boolean;
     timestamp: number;
     createdAt: string;
+    rawData?: any[]; // 添加原始資料欄位
   }> {
     const response = await api.get(`/snapshots/query/${id}`);
     return response.data;

@@ -173,6 +173,15 @@ export const SettingsPanel: React.FC = () => {
 
     console.log('處理後的圖表資料:', processedData)
     setChartData(processedData)
+    
+    // 清除 URL 中的 query 參數（靜態模式不需要）
+    const newUrl = new URL(window.location.href)
+    newUrl.searchParams.delete('query')
+    newUrl.searchParams.delete('snapshot')
+    if (newUrl.search !== window.location.search) {
+      window.history.pushState({}, '', newUrl.toString())
+    }
+    
     console.log('圖表生成成功（靜態模式）！')
   }
 
@@ -203,6 +212,21 @@ export const SettingsPanel: React.FC = () => {
       // 更新狀態
       setChartData(chartData.data)
       setCurrentSnapshotId(snapshotResponse.id)
+      
+      // 設置原始資料庫資料供資料表格使用
+      if (chartData.rawData && Array.isArray(chartData.rawData)) {
+        console.log('設置原始資料庫資料:', chartData.rawData.length, '筆')
+        setRawDatabaseData(chartData.rawData)
+      } else {
+        console.warn('動態快照沒有包含原始資料')
+        setRawDatabaseData([])
+      }
+      
+      // 更新 URL 以反映當前的動態快照狀態
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.set('query', snapshotResponse.id)
+      window.history.pushState({}, '', newUrl.toString())
+      
       console.log('圖表生成成功（動態模式）！')
       
     } catch (error) {

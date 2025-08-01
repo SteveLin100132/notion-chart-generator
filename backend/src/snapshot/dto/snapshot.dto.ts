@@ -158,4 +158,12 @@ export class CreateSnapshotDto {
   @IsOptional()
   @IsBoolean()
   isDemo?: boolean;
+
+  /**
+   * 原始資料庫資料 (可選)
+   * 用於資料表格顯示，包含完整的 Notion 資料庫記錄
+   */
+  @IsOptional()
+  @IsArray()
+  rawData?: any[];
 }
