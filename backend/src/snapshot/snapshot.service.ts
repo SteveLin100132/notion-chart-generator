@@ -8,68 +8,10 @@ import {
   createDecipheriv,
   randomBytes,
 } from 'crypto';
-import { CreateQuerySnapshotDto } from './dto/snapshot.dto';
+
+import { CreateQuerySnapshotDto } from './dto';
 import { NotionService } from '../notion/notion.service';
-
-/**
- * 快照資料介面定義
- * 用於定義儲存在檔案系統中的圖表快照結構
- */
-export interface Snapshot {
-  /** 快照唯一識別碼 */
-  id: string;
-  /** 圖表資料陣列 */
-  data: any[];
-  /** 圖表類型 (如: bar, line, pie 等) */
-  chartType: string;
-  /** 聚合函數類型 (如: sum, avg, count 等) */
-  aggregateFunction: string;
-  /** 圖表標題 */
-  title: string;
-  /** 是否為示範資料 */
-  isDemo: boolean;
-  /** 建立時間戳記 */
-  timestamp: number;
-  /** 建立日期 (ISO 字串格式) */
-  createdAt: string;
-  /** 原始資料庫資料（用於資料表格顯示） */
-  rawData?: any[];
-}
-
-/**
- * 動態快照查詢參數介面
- * 用於儲存動態查詢快照所需的參數
- */
-export interface QuerySnapshot {
-  /** 快照唯一識別碼 */
-  id: string;
-  /** Notion 資料庫 ID */
-  databaseId: string;
-  /** 加密的 Notion API Token */
-  encryptedToken: string;
-  /** X 軸屬性 ID */
-  xProperty: string;
-  /** Y 軸屬性 ID */
-  yProperty: string;
-  /** 圖表類型 (如: bar, line, pie 等) */
-  chartType: string;
-  /** 聚合函數類型 (如: sum, avg, count 等) */
-  aggregateFunction: string;
-  /** 圖表標題 */
-  title: string;
-  /** 快照模式 */
-  snapshotMode: 'dynamic';
-  /** 是否為示範資料 */
-  isDemo: boolean;
-  /** 建立時間戳記 */
-  timestamp: number;
-  /** 建立日期 (ISO 字串格式) */
-  createdAt: string;
-  /** 最後更新時間 (ISO 字串格式) */
-  lastUpdated?: string;
-  /** 篩選條件 (可選) */
-  filters?: any;
-}
+import { Snapshot, QuerySnapshot, QuerySnapshotResult } from './interface';
 
 /**
  * 快照服務類別
@@ -78,23 +20,29 @@ export interface QuerySnapshot {
  */
 @Injectable()
 export class SnapshotService {
-  /** 快照檔案儲存目錄路徑 */
+  /**
+   * 快照檔案儲存目錄路徑
+   * */
   private readonly snapshotDir = join(process.cwd(), 'snapshots');
-
-  /** 動態快照檔案儲存目錄路徑 */
+  /**
+   * 動態快照檔案儲存目錄路徑
+   */
   private readonly querySnapshotDir = join(
     process.cwd(),
     'snapshots',
     'queries',
   );
-
-  /** 加密密鑰（應該從環境變數取得） */
+  /**
+   * 加密密鑰（應該從環境變數取得）
+   */
   private readonly encryptionKey =
     process.env.ENCRYPTION_KEY || 'default-key-change-in-production';
 
   /**
    * 建構函數
    * 初始化服務並確保快照目錄存在
+   *
+   * @param snapshotService - 快照服務實例
    */
   constructor(private readonly notionService: NotionService) {
     this.ensureSnapshotDir();
@@ -130,6 +78,7 @@ export class SnapshotService {
    * 使用 AES-256-CBC 演算法對敏感資料進行加密
    *
    * @param token - 要加密的 API Token
+   * @return 加密後的 Token 字串
    */
   private encryptToken(token: string): string {
     const algorithm = 'aes-256-cbc';
@@ -149,6 +98,7 @@ export class SnapshotService {
    * 解密先前加密的 API Token
    *
    * @param encryptedToken - 加密的 API Token
+   * @return 解密後的 Token 字串
    */
   private decryptToken(encryptedToken: string): string {
     const algorithm = 'aes-256-cbc';
@@ -179,12 +129,7 @@ export class SnapshotService {
    */
   async createQuerySnapshot(
     dto: CreateQuerySnapshotDto,
-  ): Promise<{
-    id: string;
-    message: string;
-    timestamp: number;
-    snapshotMode: string;
-  }> {
+  ): Promise<QuerySnapshotResult> {
     const timestamp = Date.now();
     // 產生格式為 "query_{timestamp}_{8位隨機碼}" 的唯一 ID
     const id = `query_${timestamp}_${uuidv4().substring(0, 8)}`;
@@ -288,83 +233,6 @@ export class SnapshotService {
   }
 
   /**
-   * 查詢 Notion 資料庫
-   * 呼叫 Notion API 取得最新的資料庫內容
-   *
-   * @param databaseId - Notion 資料庫 ID
-   * @param token - Notion API Token
-   * @param xProperty - X 軸屬性名稱
-   * @param yProperty - Y 軸屬性名稱
-   * @param aggregateFunction - 聚合函數
-   * @param filters - 篩選條件 (可選)
-   * @returns 處理後的圖表資料
-   * @private
-   */
-  private async queryNotionDatabase(
-    databaseId: string,
-    token: string,
-    xProperty: string,
-    yProperty: string,
-    aggregateFunction: string,
-    filters?: any,
-  ): Promise<any[]> {
-    try {
-      console.log('Querying Notion database:', {
-        databaseId,
-        xProperty,
-        yProperty,
-        aggregateFunction,
-        filters: filters ? 'Applied' : 'None',
-      });
-
-      // 查詢資料庫資料 - 獲取所有資料
-      let allData: any[] = [];
-      let hasMore = true;
-      let nextCursor: string | null = null;
-
-      while (hasMore) {
-        const response = await this.notionService.queryDatabase(
-          token,
-          databaseId,
-          filters, // 使用傳入的篩選條件
-          100, // pageSize
-          nextCursor,
-        );
-
-        allData = [...allData, ...response.results];
-        hasMore = response.has_more;
-        nextCursor = response.next_cursor;
-
-        console.log(
-          `Fetched ${response.results.length} records, total: ${allData.length}`,
-        );
-      }
-
-      console.log(`Total records fetched: ${allData.length}`);
-
-      if (allData.length === 0) {
-        console.warn('No data found in database');
-        return [];
-      }
-
-      // 處理資料
-      const processedData = this.processNotionData(
-        allData,
-        xProperty,
-        yProperty,
-        '', // labelProperty 暫時為空
-        aggregateFunction,
-      );
-
-      console.log(`Processed data: ${processedData.length} items`);
-      return processedData;
-    } catch (error) {
-      console.error('Error querying Notion database:', error);
-      throw new Error(`Failed to query Notion database: ${error.message}`);
-    }
-  }
-
-  /**
    * 查詢 Notion 資料庫並返回原始資料和處理後資料
    * 呼叫 Notion API 取得最新的資料庫內容，同時返回原始資料供資料表格使用
    *
@@ -375,7 +243,6 @@ export class SnapshotService {
    * @param aggregateFunction - 聚合函數
    * @param filters - 篩選條件 (可選)
    * @returns 包含處理後圖表資料和原始資料的物件
-   * @private
    */
   private async queryNotionDatabaseWithRaw(
     databaseId: string,
@@ -458,7 +325,6 @@ export class SnapshotService {
    * @param labelProperty - 標籤屬性名稱
    * @param aggregateFunction - 聚合函數
    * @returns 處理後的圖表資料
-   * @private
    */
   private processNotionData(
     data: any[],
@@ -578,7 +444,6 @@ export class SnapshotService {
    *
    * @param property - Notion 屬性物件
    * @returns 提取的屬性值
-   * @private
    */
   private extractPropertyValue(property: any): any {
     if (!property) return '';

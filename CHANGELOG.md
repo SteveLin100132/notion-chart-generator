@@ -1,5 +1,41 @@
 # Changelog
 
+## [Unreleased]
+
+### Refactored
+
+- **後端 DTO/Interface 標準化與 Swagger 文件完善**
+
+  - 所有 Notion/Snapshot 相關 DTO 檔案全面加上 @ApiProperty，補齊 type/required/description/example/default，並補充註解。
+  - 移除不必要的 class-validator 裝飾器，僅保留必要驗證，確保 NestJS validation/transform 正常。
+  - 新增/調整 interface 檔案，所有 DTO/Interface 結構與型別完全對齊。
+  - Controller (notion, snapshot, health) 全面加上 Swagger @ApiTags/@ApiBody/@ApiResponse/@ApiOkResponse，所有回傳型別皆明確標註對應 DTO。
+  - Service 層方法簽名全面型別化，回傳型別與 DTO 對齊。
+  - Health 檢查 API 改為回傳 HealthStatusDto，並加上 Swagger 文件。
+
+### Enhanced
+
+- **Swagger/OpenAPI 文件自動化**
+  - main.ts 新增 SwaggerModule 設定，API 文件可於根目錄與 /swagger-json 取得。
+  - 所有 API 端點皆有完整 Swagger 文件與範例。
+
+### Added
+
+- **依據 interface/DTO 結構補齊/新增所有 index.ts 匯出檔案**
+
+  - notion/snapshot/health 目錄下皆有 index.ts，統一匯出所有 DTO/interface/module/service/controller。
+
+- **全域攔截器 (ResponseInterceptor) 新增**
+
+  - backend main.ts 新增 ResponseInterceptor 作為全域攔截器，統一 API 回應格式，提升前後端協作一致性。
+
+### Dependency
+
+- **後端依賴套件升級/補齊**
+
+  - 新增 @nestjs/swagger、swagger-ui-express 及其型別定義於 backend。
+  - package.json/package-lock.json 已同步更新。
+
 ## [1.1.2] - 2025-08-02
 
 ### Fixed
@@ -16,6 +52,7 @@
   - Modal 內仍會顯示所有錯誤列表，並禁用套用按鈕。
 
 - **Query Builder 狀態同步修正**
+
   - 修正在按下清除篩選按鈕後，進階篩選條件介面沒有重置的問題。
   - 當外部篩選條件被清空時，Query Builder 內部狀態現在會正確同步重置為初始狀態。
   - 確保 Settings Panel 和 Modal 的清除按鈕都能完全重置 Query Builder 的顯示狀態。
@@ -23,6 +60,7 @@
 ### Refactored
 
 - **驗證邏輯重構**
+
   - 抽離 `getAllFilterErrors` 與 `validateFilterCondition` 至 `lib/filter-validation.ts`，遵守單一職責原則，提升可維護性與可測試性。
   - 驗證邏輯支援遞迴群組與條件，並可擴充更多驗證規則。
   - Query Builder 組件僅負責 UI 呈現與狀態管理，驗證與錯誤提示完全分離。
@@ -35,6 +73,7 @@
   - 改善使用者體驗，清除操作更加直觀和快速。
 
 - **效能與體驗優化**
+
   - 在 Modal 中使用 `useMemo` 優化錯誤檢查效能，避免不必要的重算。
   - 改善條件更新與父組件同步邏輯，確保所有狀態與驗證能即時反映。
 
@@ -43,6 +82,7 @@
 ### Fixed
 
 - **Notion API 篩選格式相容性修正**
+
   - 修正 `convertToNotionFilter` 產生的 filter 結構，確保所有 and/or compound 條件展平成 Notion API 規範的兩層結構，避免巢狀過深導致 500 Internal Server Error 或 Notion API 驗證失敗。
   - 舊 snapshot 若含有不合法巢狀 filter，請刪除並用新版 Query Builder 重新產生。
 
@@ -51,6 +91,7 @@
 ### Added
 
 - **進階篩選功能 (Query Builder)**
+
   - 新增 Query Builder 組件，支援複雜篩選條件建構
   - 支援多重篩選組合，每組內可設定多個條件
   - 支援 AND/OR 邏輯運算符組合篩選條件
@@ -105,6 +146,7 @@
 ### Changed
 
 - **快照系統重構** - 簡化為純動態快照架構
+
   - **BREAKING CHANGE**: 移除靜態快照和快取快照模式
   - 統一使用動態快照，確保資料即時性
   - 移除複雜的快照模式選擇器，提升用戶體驗
@@ -123,6 +165,7 @@
   - 移除快照模式選擇器 UI
 
 - **移除快取快照功能**
+
   - 完全移除快取快照模式及相關代碼
   - 簡化快照類型定義
 
@@ -135,6 +178,7 @@
   - 所有分享連結自動使用最新的 Notion 資料
 
 - **頁面載入優化**
+
   - 專注於動態快照載入：`?query=query_xxxxx`
   - 移除靜態快照 URL 參數支援
   - 簡化 URL 處理邏輯
@@ -142,6 +186,7 @@
 ### Added
 
 - **動態快照功能** - 全新的即時資料同步解決方案
+
   - 動態快照 API 端點：
     - `POST /api/snapshots/query` - 創建動態快照
     - `GET /api/snapshots/query/:id` - 執行動態快照查詢（獲取即時資料）
@@ -160,6 +205,7 @@
   - 優化大量資料處理效能
 
 - **TypeScript 錯誤修復**
+
   - 修復雷達圖 tooltip 的 TypeScript 安全性問題
   - 使用防禦性程式設計確保圖表渲染穩定性
 
@@ -173,6 +219,7 @@
   - 移除已棄用的 crypto 函數
 
 - **前端狀態管理**
+
   - 新增動態快照相關狀態管理
   - 優化分享 URL 處理邏輯
   - 改善使用者體驗流程

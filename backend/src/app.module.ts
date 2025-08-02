@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { NotionModule } from './notion/notion.module';
-import { SnapshotModule } from './snapshot/snapshot.module';
-import { HealthModule } from './health/health.module';
+import { NotionModule } from './notion';
+import { SnapshotModule } from './snapshot';
+import { HealthModule } from './health';
 
 /**
  * 應用程式的根模組。

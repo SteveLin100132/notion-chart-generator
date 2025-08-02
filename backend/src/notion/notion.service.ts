@@ -5,6 +5,11 @@ import {
   HttpException,
 } from '@nestjs/common';
 import axios, { AxiosInstance } from 'axios';
+import {
+  GetDatabasesDto,
+  GetDatabasePropertiesDto,
+  QueryDatabaseResultDto,
+} from './dto';
 
 /**
  * Notion 服務類別
@@ -19,7 +24,9 @@ import axios, { AxiosInstance } from 'axios';
  */
 @Injectable()
 export class NotionService {
-  /** Notion API 的 Axios 實例，預設配置好基本設定 */
+  /**
+   * Notion API 的 Axios 實例，預設配置好基本設定
+   */
   private readonly notionApi: AxiosInstance;
 
   /**
@@ -42,7 +49,6 @@ export class NotionService {
    *
    * @param token - Notion API Token
    * @throws BadRequestException - 當 Token 格式不正確時拋出
-   * @private
    */
   private validateToken(token: string): void {
     if (!token || (!token.startsWith('secret_') && !token.startsWith('ntn_'))) {
@@ -57,9 +63,8 @@ export class NotionService {
    *
    * @param token - Notion API Token
    * @returns 包含 Authorization 標頭的物件
-   * @private
    */
-  private getAuthHeaders(token: string) {
+  private getAuthHeaders(token: string): Record<'Authorization', string> {
     return {
       Authorization: `Bearer ${token}`,
     };
@@ -74,7 +79,7 @@ export class NotionService {
    * @throws UnauthorizedException - 當 Token 無效時
    * @throws HttpException - 當 API 請求失敗時
    */
-  async getDatabases(token: string) {
+  async getDatabases(token: string): Promise<GetDatabasesDto[]> {
     this.validateToken(token);
 
     try {
@@ -97,7 +102,7 @@ export class NotionService {
         title: this.extractTitle(db.title),
         properties: Object.keys(db.properties || {}),
         last_edited_time: db.last_edited_time,
-      }));
+      })) as GetDatabasesDto[];
     } catch (error) {
       // 處理認證錯誤
       if (error.response?.status === 401) {
@@ -122,7 +127,10 @@ export class NotionService {
    * @throws BadRequestException - 當資料庫不存在或無存取權限時
    * @throws HttpException - 當 API 請求失敗時
    */
-  async getDatabaseProperties(token: string, databaseId: string) {
+  async getDatabaseProperties(
+    token: string,
+    databaseId: string,
+  ): Promise<GetDatabasePropertiesDto> {
     this.validateToken(token);
 
     try {
@@ -184,7 +192,7 @@ export class NotionService {
         id: response.data.id,
         title: this.extractTitle(response.data.title),
         properties,
-      };
+      } as GetDatabasePropertiesDto;
     } catch (error) {
       // 處理認證錯誤
       if (error.response?.status === 401) {
@@ -224,7 +232,7 @@ export class NotionService {
     filter?: any,
     pageSize: number = 100,
     startCursor?: string,
-  ) {
+  ): Promise<QueryDatabaseResultDto> {
     this.validateToken(token);
 
     try {
@@ -251,7 +259,7 @@ export class NotionService {
         results: response.data.results,
         has_more: response.data.has_more,
         next_cursor: response.data.next_cursor,
-      };
+      } as QueryDatabaseResultDto;
     } catch (error) {
       // 處理認證錯誤
       if (error.response?.status === 401) {
