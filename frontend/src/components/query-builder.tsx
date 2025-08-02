@@ -776,171 +776,104 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
 
 // 工具函數：將QueryBuilder的輸出轉換為Notion API的filter格式
 export const convertToNotionFilter = (groups: FilterGroup[], properties: DatabaseProperty[] = []): any => {
-  if (groups.length === 0) return undefined
-  
-  // 獲取屬性類型用於filter
+  if (groups.length === 0) return undefined;
+
+  // 屬性型別對應 Notion API
   const getPropertyTypeForFilter = (propertyName: string): string => {
-    const property = properties.find(p => p.name === propertyName)
-    if (!property) return 'rich_text' // 預設
-    
+    const property = properties.find(p => p.name === propertyName);
+    if (!property) return 'rich_text';
     switch (property.type) {
-      case 'title':
-        return 'title'
-      case 'rich_text':
-        return 'rich_text'
+      case 'title': return 'title';
+      case 'rich_text': return 'rich_text';
       case 'number':
       case 'formula':
-      case 'rollup':
-        return 'number'
-      case 'select':
-        return 'select'
-      case 'multi_select':
-        return 'multi_select'
-      case 'status':
-        return 'status'
-      case 'date':
-        return 'date'
-      case 'checkbox':
-        return 'checkbox'
-      default:
-        return 'rich_text'
+      case 'rollup': return 'number';
+      case 'select': return 'select';
+      case 'multi_select': return 'multi_select';
+      case 'status': return 'status';
+      case 'date': return 'date';
+      case 'checkbox': return 'checkbox';
+      default: return 'rich_text';
     }
-  }
-  
-  // 轉換單個條件
+  };
+
+  // 單一條件轉換
   const convertCondition = (condition: FilterCondition): any => {
-    const { property, operator, value } = condition
-    
-    if (!property || !operator) return null
-    
-    // 根據運算符構建filter結構
-    const filterValue: any = {}
-    
+    const { property, operator, value } = condition;
+    if (!property || !operator) return null;
+    const filterValue: any = {};
     switch (operator) {
-      case 'equals':
-        filterValue.equals = value
-        break
-      case 'does_not_equal':
-        filterValue.does_not_equal = value
-        break
-      case 'contains':
-        filterValue.contains = value
-        break
-      case 'does_not_contain':
-        filterValue.does_not_contain = value
-        break
-      case 'starts_with':
-        filterValue.starts_with = value
-        break
-      case 'ends_with':
-        filterValue.ends_with = value
-        break
-      case 'greater_than':
-        filterValue.greater_than = value
-        break
-      case 'less_than':
-        filterValue.less_than = value
-        break
-      case 'greater_than_or_equal_to':
-        filterValue.greater_than_or_equal_to = value
-        break
-      case 'less_than_or_equal_to':
-        filterValue.less_than_or_equal_to = value
-        break
-      case 'is_empty':
-        filterValue.is_empty = true
-        break
-      case 'is_not_empty':
-        filterValue.is_not_empty = true
-        break
-      case 'before':
-        filterValue.before = value
-        break
-      case 'after':
-        filterValue.after = value
-        break
-      case 'on_or_before':
-        filterValue.on_or_before = value
-        break
-      case 'on_or_after':
-        filterValue.on_or_after = value
-        break
-      case 'past_week':
-        filterValue.past_week = {}
-        break
-      case 'past_month':  
-        filterValue.past_month = {}
-        break
-      case 'past_year':
-        filterValue.past_year = {}
-        break
+      case 'equals': filterValue.equals = value; break;
+      case 'does_not_equal': filterValue.does_not_equal = value; break;
+      case 'contains': filterValue.contains = value; break;
+      case 'does_not_contain': filterValue.does_not_contain = value; break;
+      case 'starts_with': filterValue.starts_with = value; break;
+      case 'ends_with': filterValue.ends_with = value; break;
+      case 'greater_than': filterValue.greater_than = value; break;
+      case 'less_than': filterValue.less_than = value; break;
+      case 'greater_than_or_equal_to': filterValue.greater_than_or_equal_to = value; break;
+      case 'less_than_or_equal_to': filterValue.less_than_or_equal_to = value; break;
+      case 'is_empty': filterValue.is_empty = true; break;
+      case 'is_not_empty': filterValue.is_not_empty = true; break;
+      case 'before': filterValue.before = value; break;
+      case 'after': filterValue.after = value; break;
+      case 'on_or_before': filterValue.on_or_before = value; break;
+      case 'on_or_after': filterValue.on_or_after = value; break;
+      case 'past_week': filterValue.past_week = {}; break;
+      case 'past_month': filterValue.past_month = {}; break;
+      case 'past_year': filterValue.past_year = {}; break;
       case 'between':
-        // 對於 between 運算符，需要特殊處理
-        // 返回一個 and 條件，包含 on_or_after 和 on_or_before
         if (condition.value && condition.endValue) {
           return {
             and: [
               {
                 property,
-                [getPropertyTypeForFilter(property)]: {
-                  on_or_after: condition.value
-                }
+                [getPropertyTypeForFilter(property)]: { on_or_after: condition.value }
               },
               {
                 property,
-                [getPropertyTypeForFilter(property)]: {
-                  on_or_before: condition.endValue
-                }
+                [getPropertyTypeForFilter(property)]: { on_or_before: condition.endValue }
               }
             ]
-          }
+          };
         }
-        return null
+        return null;
     }
-    
     return {
       property,
       [getPropertyTypeForFilter(property)]: filterValue
+    };
+  };
+
+  // 遞迴展平同類型 compound（僅展平同名 and/or，不跨層）
+  function flattenSameCompound(obj: any): any {
+    if (typeof obj !== 'object' || obj === null) return obj;
+    if (Array.isArray(obj)) return obj.map(flattenSameCompound);
+    if (obj.and || obj.or) {
+      const key = obj.and ? 'and' : 'or';
+      let arr = (obj[key] as any[]).map(flattenSameCompound);
+      // 展平同名 compound
+      arr = arr.flatMap(item => (item && item[key]) ? item[key] : [item]);
+      return { [key]: arr };
     }
+    return obj;
   }
-  
-  // 轉換單個組（遞歸處理子群組）
+
+  // 單一組轉換（遞迴處理子群組）
   const convertGroup = (group: FilterGroup): any => {
-    const validConditions = group.conditions
-      .map(convertCondition)
-      .filter(c => c !== null)
-    
-    // 遞歸處理子群組
-    const validSubgroups = group.subgroups 
-      ? group.subgroups.map(convertGroup).filter(sg => sg !== null)
-      : []
-    
-    // 合併條件和子群組
-    const allItems = [...validConditions, ...validSubgroups]
-    
-    if (allItems.length === 0) return null
-    
-    if (allItems.length === 1) {
-      return allItems[0]
-    }
-    
-    return {
-      [group.logicalOperator]: allItems
-    }
-  }
-  
+    const validConditions = group.conditions.map(convertCondition).filter(Boolean);
+    const validSubgroups = group.subgroups ? group.subgroups.map(convertGroup).filter(Boolean) : [];
+    const allItems = [...validConditions, ...validSubgroups];
+    if (allItems.length === 0) return null;
+    if (allItems.length === 1) return allItems[0];
+    return { [group.logicalOperator]: allItems };
+  };
+
   // 轉換所有組
-  const validGroups = groups
-    .map(convertGroup)
-    .filter(g => g !== null)
-  
-  if (validGroups.length === 0) return undefined
-  
-  if (validGroups.length === 1) {
-    return validGroups[0]
-  }
-  
-  return {
-    and: validGroups
-  }
+  const validGroups = groups.map(convertGroup).filter(Boolean);
+  if (validGroups.length === 0) return undefined;
+  if (validGroups.length === 1) return flattenSameCompound(validGroups[0]);
+
+  // 多組時，頂層只包一層 and，且展平同名 compound
+  return flattenSameCompound({ and: validGroups });
 }
