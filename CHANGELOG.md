@@ -1,14 +1,5 @@
 # Changelog
 
-## [1.1.3] - 2025-08-02
-
-### Fixed
-
-- **Query Builder 狀態同步修正**
-  - 修正在按下清除篩選按鈕後，進階篩選條件介面沒有重置的問題。
-  - 當外部篩選條件被清空時，Query Builder 內部狀態現在會正確同步重置為初始狀態。
-  - 確保 Settings Panel 和 Modal 的清除按鈕都能完全重置 Query Builder 的顯示狀態。
-
 ## [1.1.2] - 2025-08-02
 
 ### Fixed
@@ -20,8 +11,14 @@
   - 修正日期驗證在 Query Builder Modal 及條件編輯時的即時反饋，確保錯誤能即時顯示並正確禁用「套用篩選」按鈕。
 
 - **錯誤提示顯示優化**
+
   - 移除 Query Builder 上方 summary/alert bar 的全域錯誤提示，僅在條件輸入區塊旁顯示即時錯誤。
   - Modal 內仍會顯示所有錯誤列表，並禁用套用按鈕。
+
+- **Query Builder 狀態同步修正**
+  - 修正在按下清除篩選按鈕後，進階篩選條件介面沒有重置的問題。
+  - 當外部篩選條件被清空時，Query Builder 內部狀態現在會正確同步重置為初始狀態。
+  - 確保 Settings Panel 和 Modal 的清除按鈕都能完全重置 Query Builder 的顯示狀態。
 
 ### Refactored
 
@@ -49,11 +46,6 @@
   - 修正 `convertToNotionFilter` 產生的 filter 結構，確保所有 and/or compound 條件展平成 Notion API 規範的兩層結構，避免巢狀過深導致 500 Internal Server Error 或 Notion API 驗證失敗。
   - 舊 snapshot 若含有不合法巢狀 filter，請刪除並用新版 Query Builder 重新產生。
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 ## [1.1.0] - 2025-08-02
 
 ### Added
@@ -70,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **文字類型**: 等於、不等於、包含、不包含、開始於、結束於、為空、不為空
     - **選擇類型**: 等於、不等於、為空、不為空
     - **多選類型**: 包含、不包含、為空、不為空
-    - **日期類型**: 等於、不等於、之前、之後、上週、本週、下週、上月、本月、下月、為空、不為空
+    - **日期類型**: 等於、不等於、之前、之後、介於、上週、本週、下週、上月、本月、下月、為空、不為空
     - **布林類型**: 等於、不等於
   - 視覺化篩選條件建構器，支援動態新增/刪除條件組
   - **遞歸渲染系統** - 支援嵌套群組的遞歸渲染和管理
@@ -326,4 +318,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-_更多詳細變更請參考 [Git Commit History](https://github.com/SteveLin100132/notion-chart-generator/commits/master)_
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
