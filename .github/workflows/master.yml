@@ -67,7 +67,7 @@ jobs:
         uses: actions-ecosystem/action-bump-semver@v1
         with:
           current_version: ${{ env.APP_VERSION }}
-          level: minor
+          level: patch
 
       - name: Install GitHub CLI
         run: sudo apt-get update && sudo apt-get install -y gh
