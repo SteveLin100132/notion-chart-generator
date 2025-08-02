@@ -335,7 +335,7 @@ export const SettingsPanel: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {getCompatibleProperties().filter(prop => prop.name && prop.name.trim()).map((prop) => (
-                      <SelectItem key={prop.id} value={prop.name}>
+                      <SelectItem key={prop.id} value={prop.name} type={prop.type}>
                         {prop.name} ({prop.type})
                       </SelectItem>
                     ))}
@@ -354,7 +354,7 @@ export const SettingsPanel: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {getCompatibleProperties(true).filter(prop => prop.name && prop.name.trim()).map((prop) => (
-                      <SelectItem key={prop.id} value={prop.name}>
+                      <SelectItem key={prop.id} value={prop.name} type={prop.type}>
                         {prop.name} ({prop.type})
                       </SelectItem>
                     ))}
@@ -411,7 +411,7 @@ export const SettingsPanel: React.FC = () => {
                   <SelectContent>
                     <SelectItem value="none">無</SelectItem>
                     {getCompatibleProperties().filter(prop => prop.name && prop.name.trim()).map((prop) => (
-                      <SelectItem key={prop.id} value={prop.name}>
+                      <SelectItem key={prop.id} value={prop.name} type={prop.type}>
                         {prop.name} ({prop.type})
                       </SelectItem>
                     ))}
