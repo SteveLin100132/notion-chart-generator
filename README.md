@@ -12,6 +12,10 @@
 
 <br />
 一個採用現代前後端分離架構的 Web 應用程式，使用 NestJS + Next.js 技術棧，能夠連接 Notion 資料庫並將資料轉換為美觀的互動式圖表。支援多種圖表類型、資料聚合計算、即時分享和跨平台嵌入功能。
+<br />
+<br />
+
+![Notion Chart Generator Usage Demo](assets/images/notion-chart-generator-usage-demo.gif)
 
 ## 主要功能
 
