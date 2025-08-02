@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.1.2] - 2025-08-02
+
+### Fixed
+
+- **日期區間驗證修正**
+
+  - 修正「結束日期不能早於開始日期」的驗證，允許 UI 輸入任何日期，並由驗證邏輯統一處理錯誤。
+  - 改善日期解析邏輯，支援多種格式，避免因格式問題導致驗證失效。
+  - 修正日期驗證在 Query Builder Modal 及條件編輯時的即時反饋，確保錯誤能即時顯示並正確禁用「套用篩選」按鈕。
+
+- **錯誤提示顯示優化**
+
+  - 移除 Query Builder 上方 summary/alert bar 的全域錯誤提示，僅在條件輸入區塊旁顯示即時錯誤。
+  - Modal 內仍會顯示所有錯誤列表，並禁用套用按鈕。
+
+- **Query Builder 狀態同步修正**
+  - 修正在按下清除篩選按鈕後，進階篩選條件介面沒有重置的問題。
+  - 當外部篩選條件被清空時，Query Builder 內部狀態現在會正確同步重置為初始狀態。
+  - 確保 Settings Panel 和 Modal 的清除按鈕都能完全重置 Query Builder 的顯示狀態。
+
+### Refactored
+
+- **驗證邏輯重構**
+  - 抽離 `getAllFilterErrors` 與 `validateFilterCondition` 至 `lib/filter-validation.ts`，遵守單一職責原則，提升可維護性與可測試性。
+  - 驗證邏輯支援遞迴群組與條件，並可擴充更多驗證規則。
+  - Query Builder 組件僅負責 UI 呈現與狀態管理，驗證與錯誤提示完全分離。
+
+### Enhanced
+
+- **篩選清除工作流程簡化**
+
+  - Settings Panel 和 Modal 的清除按鈕現在可以一鍵清除所有篩選條件，無需額外確認或點擊套用。
+  - 改善使用者體驗，清除操作更加直觀和快速。
+
+- **效能與體驗優化**
+  - 在 Modal 中使用 `useMemo` 優化錯誤檢查效能，避免不必要的重算。
+  - 改善條件更新與父組件同步邏輯，確保所有狀態與驗證能即時反映。
+
 ## [1.1.1] - 2025-08-02
 
 ### Fixed
@@ -7,11 +45,6 @@
 - **Notion API 篩選格式相容性修正**
   - 修正 `convertToNotionFilter` 產生的 filter 結構，確保所有 and/or compound 條件展平成 Notion API 規範的兩層結構，避免巢狀過深導致 500 Internal Server Error 或 Notion API 驗證失敗。
   - 舊 snapshot 若含有不合法巢狀 filter，請刪除並用新版 Query Builder 重新產生。
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.1.0] - 2025-08-02
 
@@ -29,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **文字類型**: 等於、不等於、包含、不包含、開始於、結束於、為空、不為空
     - **選擇類型**: 等於、不等於、為空、不為空
     - **多選類型**: 包含、不包含、為空、不為空
-    - **日期類型**: 等於、不等於、之前、之後、上週、本週、下週、上月、本月、下月、為空、不為空
+    - **日期類型**: 等於、不等於、之前、之後、介於、上週、本週、下週、上月、本月、下月、為空、不為空
     - **布林類型**: 等於、不等於
   - 視覺化篩選條件建構器，支援動態新增/刪除條件組
   - **遞歸渲染系統** - 支援嵌套群組的遞歸渲染和管理
@@ -285,4 +318,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-_更多詳細變更請參考 [Git Commit History](https://github.com/SteveLin100132/notion-chart-generator/commits/master)_
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).

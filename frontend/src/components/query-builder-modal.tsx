@@ -3,9 +3,10 @@
 import React from 'react'
 import { Modal } from '@/components/ui/modal'
 import { QueryBuilder, FilterGroup } from '@/components/query-builder'
+import { getAllFilterErrors } from '@/lib/filter-validation'
 import { DatabaseProperty } from '@/lib/store'
 import { Button } from '@/components/ui/button'
-import { Filter, Save, RotateCcw } from 'lucide-react'
+import { Filter, Save, RotateCcw, AlertCircle } from 'lucide-react'
 
 interface QueryBuilderModalProps {
   isOpen: boolean
@@ -42,11 +43,20 @@ export const QueryBuilderModal: React.FC<QueryBuilderModalProps> = ({
   }
 
   const handleReset = () => {
-    setLocalFilterGroups([])
+    // 直接清除篩選條件並套用
+    onFilterGroupsChange([])
+    onClose()
   }
 
   const hasChanges = JSON.stringify(localFilterGroups) !== JSON.stringify(filterGroups)
   const hasFilters = localFilterGroups.length > 0
+  
+  // 檢查篩選條件錯誤 (使用 useMemo 確保在 localFilterGroups 變化時重新計算)
+  const filterErrors = React.useMemo(() => {
+    return getAllFilterErrors(localFilterGroups, properties)
+  }, [localFilterGroups, properties])
+  
+  const hasErrors = filterErrors.length > 0
 
   return (
     <Modal
@@ -84,7 +94,7 @@ export const QueryBuilderModal: React.FC<QueryBuilderModalProps> = ({
         </div>
 
         {/* 篩選狀態提示 */}
-        {hasFilters && (
+        {hasFilters && !hasErrors && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-3">
             <div className="flex items-center gap-2 text-sm text-green-800">
               <Filter className="h-4 w-4" />
@@ -92,6 +102,23 @@ export const QueryBuilderModal: React.FC<QueryBuilderModalProps> = ({
                 目前共有 {localFilterGroups.length} 個篩選組，
                 包含 {localFilterGroups.reduce((total, group) => total + group.conditions.length, 0)} 個條件
               </span>
+            </div>
+          </div>
+        )}
+
+        {/* 錯誤提示 */}
+        {hasErrors && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <div className="flex items-start gap-2 text-sm text-red-800">
+              <AlertCircle className="h-4 w-4 mt-0.5" />
+              <div>
+                <div className="font-medium mb-1">篩選條件有誤：</div>
+                <ul className="list-disc list-inside space-y-0.5">
+                  {filterErrors.map((error, index) => (
+                    <li key={index} className="text-xs">{error}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         )}
@@ -107,7 +134,7 @@ export const QueryBuilderModal: React.FC<QueryBuilderModalProps> = ({
                 className="text-red-600 border-red-200 hover:bg-red-50"
               >
                 <RotateCcw className="h-4 w-4 mr-1" />
-                清除所有篩選
+                清除並關閉
               </Button>
             )}
           </div>
@@ -121,11 +148,11 @@ export const QueryBuilderModal: React.FC<QueryBuilderModalProps> = ({
             </Button>
             <Button
               onClick={handleSave}
-              className="bg-black hover:bg-gray-800 text-white"
-              disabled={!hasChanges && hasFilters === (filterGroups.length > 0)}
+              className="bg-black hover:bg-gray-800 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={hasErrors || (!hasChanges && hasFilters === (filterGroups.length > 0))}
             >
               <Save className="h-4 w-4 mr-1" />
-              套用篩選 {hasFilters ? `(${localFilterGroups.length})` : ''}
+              {hasErrors ? '無法套用 (有錯誤)' : `套用篩選 ${hasFilters ? `(${localFilterGroups.length})` : ''}`}
             </Button>
           </div>
         </div>

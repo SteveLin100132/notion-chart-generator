@@ -1,6 +1,6 @@
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
-import { Check, ChevronDown, ChevronUp } from "lucide-react"
+import { Check, ChevronDown, ChevronUp, List, Text, CheckSquare, Calendar, User, Hash, Phone, FileText, FunctionSquare } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -109,27 +109,47 @@ const SelectLabel = React.forwardRef<
 ))
 SelectLabel.displayName = SelectPrimitive.Label.displayName
 
+// Notion property type 對應 icon（可依需求擴充）
+const typeIconMap: Record<string, React.ReactNode> = {
+  select: <List className="h-4 w-4 mr-2 text-gray-500" />,
+  multi_select: <List className="h-4 w-4 mr-2 text-gray-500" />,
+  rich_text: <Text className="h-4 w-4 mr-2 text-gray-500" />,
+  checkbox: <CheckSquare className="h-4 w-4 mr-2 text-gray-500" />,
+  created_time: <Calendar className="h-4 w-4 mr-2 text-gray-500" />,
+  people: <User className="h-4 w-4 mr-2 text-gray-500" />,
+  date: <Calendar className="h-4 w-4 mr-2 text-gray-500" />,
+  number: <Hash className="h-4 w-4 mr-2 text-gray-500" />,
+  phone_number: <Phone className="h-4 w-4 mr-2 text-gray-500" />,
+  title: <FileText className="h-4 w-4 mr-2 text-gray-500" />,
+  formula: <FunctionSquare className="h-4 w-4 mr-2 text-gray-500" />,
+}
+
+// 讓 SelectItem 支援 type 屬性
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Item
-    ref={ref}
-    className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      className
-    )}
-    {...props}
-  >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-      <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4" />
-      </SelectPrimitive.ItemIndicator>
-    </span>
-
-    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-  </SelectPrimitive.Item>
-))
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item> & { type?: string }
+>(({ className, children, type, ...props }, ref) => {
+  const itemType = type || "default";
+  return (
+    <SelectPrimitive.Item
+      ref={ref}
+      className={cn(
+        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        className
+      )}
+      {...props}
+    >
+      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+        <SelectPrimitive.ItemIndicator>
+          <Check className="h-4 w-4" />
+        </SelectPrimitive.ItemIndicator>
+      </span>
+      {/* 根據 type 顯示 icon */}
+      {typeIconMap[itemType] || <Text className="h-4 w-4 mr-2 text-gray-400" />}
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    </SelectPrimitive.Item>
+  );
+})
 SelectItem.displayName = SelectPrimitive.Item.displayName
 
 const SelectSeparator = React.forwardRef<
