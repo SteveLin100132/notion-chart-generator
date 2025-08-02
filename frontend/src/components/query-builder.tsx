@@ -3,51 +3,16 @@
 import React, { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { MultiSelectDropdown } from "@/components/ui/multi-select-dropdown";
 import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/ui/date-picker'
 import { DatabaseProperty } from '@/lib/store'
 import { Plus, X, Trash2 } from 'lucide-react'
+import { Badge } from "@/components/ui/badge";
+import { getAllFilterErrors } from '@/lib/filter-validation'
 
-// Badge 組件 - 與資料表格中的樣式保持一致
-const Badge: React.FC<{ text: string; color?: string; size?: 'sm' | 'md' }> = ({ 
-  text, 
-  color = 'default', 
-  size = 'sm' 
-}) => {
-  const getColorClasses = (color: string) => {
-    switch (color) {
-      case 'gray':
-      case 'default':
-        return 'bg-gray-100 text-gray-800'
-      case 'brown':
-        return 'bg-amber-100 text-amber-800'
-      case 'orange':
-        return 'bg-orange-100 text-orange-800'
-      case 'yellow':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'green':
-        return 'bg-green-100 text-green-800'
-      case 'blue':
-        return 'bg-blue-100 text-blue-800'
-      case 'purple':
-        return 'bg-purple-100 text-purple-800'
-      case 'pink':
-        return 'bg-pink-100 text-pink-800'
-      case 'red':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const sizeClasses = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1 text-sm'
-
-  return (
-    <span className={`inline-flex items-center rounded-full font-medium whitespace-nowrap ${getColorClasses(color)} ${sizeClasses}`}>
-      {text}
-    </span>
-  )
-}
+// 重新導出驗證函數以保持向後兼容
+export { getAllFilterErrors, hasFilterErrors, validateFilterCondition } from '@/lib/filter-validation'
 
 // Notion 顏色對應表，與 Notion 的實際顏色保持一致
 const NOTION_COLORS: { [key: string]: string } = {
@@ -115,20 +80,22 @@ const OPERATORS: { [key: string]: OperatorConfig[] } = {
   
   // 文字類型運算符
   text: [
-    { value: 'equals', label: '等於', hasValue: true, allowedTypes: ['title', 'rich_text'] },
-    { value: 'does_not_equal', label: '不等於', hasValue: true, allowedTypes: ['title', 'rich_text'] },
-    { value: 'contains', label: '包含', hasValue: true, allowedTypes: ['title', 'rich_text'] },
-    { value: 'does_not_contain', label: '不包含', hasValue: true, allowedTypes: ['title', 'rich_text'] },
-    { value: 'starts_with', label: '開始於', hasValue: true, allowedTypes: ['title', 'rich_text'] },
-    { value: 'ends_with', label: '結束於', hasValue: true, allowedTypes: ['title', 'rich_text'] },
-    { value: 'is_empty', label: '為空', hasValue: false, allowedTypes: ['title', 'rich_text'] },
-    { value: 'is_not_empty', label: '不為空', hasValue: false, allowedTypes: ['title', 'rich_text'] },
+    { value: 'equals', label: '等於', hasValue: true, allowedTypes: ['text'] },
+    { value: 'does_not_equal', label: '不等於', hasValue: true, allowedTypes: ['text'] },
+    { value: 'contains', label: '包含', hasValue: true, allowedTypes: ['text'] },
+    { value: 'does_not_contain', label: '不包含', hasValue: true, allowedTypes: ['text'] },
+    { value: 'starts_with', label: '開始於', hasValue: true, allowedTypes: ['text'] },
+    { value: 'ends_with', label: '結束於', hasValue: true, allowedTypes: ['text'] },
+    { value: 'is_empty', label: '為空', hasValue: false, allowedTypes: ['text'] },
+    { value: 'is_not_empty', label: '不為空', hasValue: false, allowedTypes: ['text'] },
   ],
-  
+
   // 選擇類型運算符
   select: [
     { value: 'equals', label: '等於', hasValue: true, allowedTypes: ['select'] },
     { value: 'does_not_equal', label: '不等於', hasValue: true, allowedTypes: ['select'] },
+    { value: 'contains', label: '包含', hasValue: true, allowedTypes: ['select'] },
+    { value: 'does_not_contain', label: '不包含', hasValue: true, allowedTypes: ['select'] },
     { value: 'is_empty', label: '為空', hasValue: false, allowedTypes: ['select'] },
     { value: 'is_not_empty', label: '不為空', hasValue: false, allowedTypes: ['select'] },
   ],
@@ -225,31 +192,48 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
 
   const [groups, setGroups] = useState<FilterGroup[]>(value.length > 0 ? value : [createNewGroup()])
 
+  // 監聽外部 value 變化並同步內部狀態
+  React.useEffect(() => {
+    if (value.length === 0) {
+      // 當外部清空篩選條件時，重置為一個空的篩選組
+      setGroups([createNewGroup()])
+    } else {
+      // 當外部有篩選條件時，同步更新
+      setGroups(value)
+    }
+  }, [value, createNewGroup])
+
   // 根據屬性類型獲取可用的運算符
   const getOperatorsForProperty = useCallback((propertyName: string): OperatorConfig[] => {
-    const property = properties.find(p => p.name === propertyName)
-    if (!property) return []
+    const property = properties.find(p => p.name === propertyName);
+    // 若找不到 property，但 propertyName 字串包含 multi_select，仍回傳 multi_select 運算子
+    if (!property) {
+      if (propertyName && propertyName.toLowerCase().includes('multi_select')) {
+        return OPERATORS.multi_select;
+      }
+      return OPERATORS.text;
+    }
 
     switch (property.type) {
       case 'number':
       case 'formula':
       case 'rollup':
-        return OPERATORS.number
+        return OPERATORS.number;
       case 'title':
       case 'rich_text':
-        return OPERATORS.text
+        return OPERATORS.text;
       case 'select':
-        return OPERATORS.select
+        return OPERATORS.select;
       case 'multi_select':
-        return OPERATORS.multi_select
+        return OPERATORS.multi_select;
       case 'date':
-        return OPERATORS.date
+        return OPERATORS.date;
       case 'checkbox':
-        return OPERATORS.checkbox
+        return OPERATORS.checkbox;
       case 'status':
-        return OPERATORS.status
+        return OPERATORS.status;
       default:
-        return OPERATORS.text // 預設使用文字運算符
+        return OPERATORS.text;
     }
   }, [properties])
 
@@ -272,13 +256,6 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
     updateGroups(newGroups)
   }, [groups, updateGroups])
 
-  // 更新組的邏輯運算符
-  const updateGroupLogicalOperator = useCallback((groupId: string, operator: 'and' | 'or') => {
-    const newGroups = groups.map(group =>
-      group.id === groupId ? { ...group, logicalOperator: operator } : group
-    )
-    updateGroups(newGroups)
-  }, [groups, updateGroups])
 
   // 添加條件到組
   const addConditionToGroup = useCallback((groupId: string) => {
@@ -464,10 +441,81 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
 
   // 渲染值輸入框
   const renderValueInput = useCallback((condition: FilterCondition, groupId: string) => {
-    const property = properties.find(p => p.name === condition.property)
-    const operator = getOperatorsForProperty(condition.property).find(op => op.value === condition.operator)
-    
-    if (!operator?.hasValue) return null
+    const property = properties.find(p => p.name === condition.property);
+    // select/multi_select: 僅在 contains/does_not_contain 時顯示多選下拉
+    if (property && (property.type === 'multi_select' || property.type === 'select')) {
+      const multiSelectOps = ['contains', 'does_not_contain'];
+      let op = condition.operator;
+      if (!op) {
+        // 自動補 operator
+        op = 'contains';
+        setTimeout(() => updateCondition(groupId, condition.id, { operator: 'contains' }), 0);
+      }
+      // select/multi_select: 包含/不包含時顯示多選，其餘顯示單選
+      if (multiSelectOps.includes(op)) {
+        // 確保 value 為陣列且型別正確
+        let selectedValues: string[] = [];
+        if (Array.isArray(condition.value)) {
+          selectedValues = condition.value.filter((v): v is string => typeof v === 'string');
+        } else if (typeof condition.value === 'string') {
+          selectedValues = [condition.value];
+        } else if (condition.value == null) {
+          selectedValues = [];
+        }
+        // options 型別安全
+        const options = Array.isArray((property as any)?.options) ? (property as any).options : [];
+        return (
+          <div style={{ maxWidth: 320 }}>
+            <MultiSelectDropdown
+              options={options}
+              selectedValues={selectedValues}
+              onChange={vals => updateCondition(groupId, condition.id, { value: vals as any })}
+              tagContainerClassName="flex flex-nowrap overflow-hidden whitespace-nowrap gap-1 max-w-full"
+            />
+          </div>
+        );
+      } else if (property.type === 'select') {
+        // 其餘 select 顯示單選
+        return (
+          <Select
+            value={condition.value as string || ''}
+            onValueChange={(value) => updateCondition(groupId, condition.id, { value })}
+          >
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="選擇選項">
+                {condition.value && property?.options?.find(option => option.name === condition.value) && (
+                  <Badge 
+                    text={condition.value as string} 
+                    color={property.options.find(option => option.name === condition.value)?.color}
+                    size="sm"
+                  />
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="max-w-xs">
+              {property?.options?.map((option) => (
+                <SelectItem key={option.id} value={option.name} className="max-w-full">
+                  <div className="flex items-center space-x-2 min-w-0 max-w-full">
+                    <Badge 
+                      text={option.name} 
+                      color={option.color}
+                      size="sm"
+                    />
+                  </div>
+                </SelectItem>
+              )) || (
+                <SelectItem value="" disabled>
+                  無可用選項
+                </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+        );
+      }
+    }
+    // 其餘型別
+    const operator = getOperatorsForProperty(condition.property).find(op => op.value === condition.operator);
+    if (!operator?.hasValue) return null;
 
     switch (property?.type) {
       case 'number':
@@ -481,8 +529,7 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
             onChange={(e) => updateCondition(groupId, condition.id, { value: parseFloat(e.target.value) || 0 })}
             className="w-32"
           />
-        )
-      
+        );
       case 'checkbox':
         return (
           <Select
@@ -497,10 +544,8 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
               <SelectItem value="false">否</SelectItem>
             </SelectContent>
           </Select>
-        )
-      
+        );
       case 'select':
-      case 'multi_select':
       case 'status':
         return (
           <Select
@@ -536,27 +581,43 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
               )}
             </SelectContent>
           </Select>
-        )
-      
+        );
       case 'date':
         if (condition.operator === 'between') {
+          // 檢查結束日期不可早於開始日期
+          const start = condition.value ? new Date(condition.value as string) : null;
+          const end = condition.endValue ? new Date(condition.endValue as string) : null;
+          const invalid = start && end && end < start;
           return (
             <div className="flex items-center space-x-2">
               <DatePicker
                 value={condition.value as string || ''}
-                onChange={(value) => updateCondition(groupId, condition.id, { value })}
+                onChange={(value) => {
+                  // 若新的開始日期大於目前結束日期，則自動清空結束日期
+                  if (condition.endValue && value && new Date(value) > new Date(condition.endValue as string)) {
+                    updateCondition(groupId, condition.id, { value, endValue: '' });
+                  } else {
+                    updateCondition(groupId, condition.id, { value });
+                  }
+                }}
                 placeholder="開始日期"
                 className="w-36"
               />
               <span className="text-sm text-gray-500">至</span>
               <DatePicker
                 value={condition.endValue as string || ''}
-                onChange={(value) => updateCondition(groupId, condition.id, { endValue: value })}
+                onChange={(value) => {
+                  // 允許設置任何日期，讓驗證邏輯處理錯誤
+                  updateCondition(groupId, condition.id, { endValue: value });
+                }}
                 placeholder="結束日期"
                 className="w-36"
               />
+              {invalid && (
+                <span className="text-xs text-red-500 ml-2">結束日期不能早於開始日期</span>
+              )}
             </div>
-          )
+          );
         }
         return (
           <DatePicker
@@ -565,8 +626,7 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
             placeholder="選擇日期"
             className="w-40"
           />
-        )
-      
+        );
       default:
         return (
           <Input
@@ -575,9 +635,9 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
             onChange={(e) => updateCondition(groupId, condition.id, { value: e.target.value })}
             className="w-48"
           />
-        )
+        );
     }
-  }, [properties, getOperatorsForProperty, updateCondition])
+  }, [properties, getOperatorsForProperty, updateCondition]);
 
   // 遞歸渲染群組（支援子群組）
   const renderGroup = useCallback((group: FilterGroup, groupIndex: number, isSubgroup: boolean = false, parentGroupId?: string) => {
@@ -591,7 +651,7 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
               onValueChange={(value: 'and' | 'or') => 
                 isSubgroup 
                   ? updateSubgroupLogicalOperator(group.id, value)
-                  : updateGroupLogicalOperator(group.id, value)
+                  : updateGroups(groups.map(g => g.id === group.id ? { ...g, logicalOperator: value } : g))
               }
             >
               <SelectTrigger className="w-16 h-8 text-xs">
@@ -674,7 +734,7 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   {properties.map((prop) => (
-                    <SelectItem key={prop.name} value={prop.name}>
+                    <SelectItem key={prop.name} value={prop.name} type={prop.type}>
                       {prop.name} ({prop.type})
                     </SelectItem>
                   ))}
@@ -683,7 +743,15 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
 
               {/* 運算符選擇 */}
               <Select
-                value={condition.operator}
+                value={
+                  (() => {
+                    const property = properties.find(p => p.name === condition.property);
+                    if (property?.type === 'multi_select') {
+                      return condition.operator || 'contains';
+                    }
+                    return condition.operator;
+                  })()
+                }
                 onValueChange={(value) => updateCondition(group.id, condition.id, { 
                   operator: value, 
                   value: '' 
@@ -738,7 +806,7 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
   }, [
     groups, 
     properties, 
-    updateGroupLogicalOperator,
+    updateGroups,
     updateSubgroupLogicalOperator,
     addConditionToGroup,
     addConditionToSubgroup,
@@ -801,6 +869,20 @@ export const convertToNotionFilter = (groups: FilterGroup[], properties: Databas
   const convertCondition = (condition: FilterCondition): any => {
     const { property, operator, value } = condition;
     if (!property || !operator) return null;
+    // select 欄位複選: 轉換為 or/and equals/does_not_equal 子條件
+    const propertyType = getPropertyTypeForFilter(property);
+    if (propertyType === 'select' && (operator === 'contains' || operator === 'does_not_contain') && Array.isArray(value)) {
+      // contains: or [equals]
+      // does_not_contain: and [does_not_equal]
+      const subOperator = operator === 'contains' ? 'equals' : 'does_not_equal';
+      const logic = operator === 'contains' ? 'or' : 'and';
+      const subFilters = value.map((v) => ({
+        property,
+        [propertyType]: { [subOperator]: v }
+      }));
+      return { [logic]: subFilters };
+    }
+    // 其餘型別
     const filterValue: any = {};
     switch (operator) {
       case 'equals': filterValue.equals = value; break;
