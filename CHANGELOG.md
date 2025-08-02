@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1] - 2025-08-02
+
+### Fixed
+
+- **Notion API 篩選格式相容性修正**
+  - 修正 `convertToNotionFilter` 產生的 filter 結構，確保所有 and/or compound 條件展平成 Notion API 規範的兩層結構，避免巢狀過深導致 500 Internal Server Error 或 Notion API 驗證失敗。
+  - 舊 snapshot 若含有不合法巢狀 filter，請刪除並用新版 Query Builder 重新產生。
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

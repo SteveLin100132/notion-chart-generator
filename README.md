@@ -2,7 +2,7 @@
   <img src="assets/images/notion-chart-generator-logo.png" width="100" />
   <h1>Notion Chart Generator</h1>
   <div>
-    <img src="https://img.shields.io/badge/version-1.1.0-blue.svg" />
+    <img src="https://img.shields.io/github/package-json/v/stevelin100132/notion-chart-generator">
     <img src="https://img.shields.io/badge/React-18+-61dafb.svg" />
     <img src="https://img.shields.io/badge/Next.js-14+-black.svg" />
     <img src="https://img.shields.io/badge/NestJS-10+-e0234e.svg" />
