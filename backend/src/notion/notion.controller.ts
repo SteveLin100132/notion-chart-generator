@@ -1,10 +1,10 @@
 import { Controller, Post, Body } from '@nestjs/common';
+import { ApiTags, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { NotionService } from './notion.service';
-import {
-  NotionTokenDto,
-  DatabasePropertiesDto,
-  QueryDatabaseDto,
-} from './dto/notion.dto';
+import { NotionTokenDto, DatabasePropertiesDto, QueryDatabaseDto } from './dto';
+import { GetDatabasesDto } from './dto/get-databases.dto';
+import { GetDatabasePropertiesDto } from './dto/get-database-properties.dto';
+import { QueryDatabaseResultDto } from './dto/query-database-result.dto';
 
 /**
  * Notion 控制器
@@ -18,6 +18,7 @@ import {
  *
  * @controller notion
  */
+@ApiTags('notion')
 @Controller('notion')
 export class NotionController {
   /**
@@ -44,7 +45,13 @@ export class NotionController {
    * }
    */
   @Post('databases')
-  async getDatabases(@Body() dto: NotionTokenDto) {
+  @ApiBody({ type: NotionTokenDto })
+  @ApiResponse({
+    status: 200,
+    description: '取得資料庫清單',
+    type: [GetDatabasesDto],
+  })
+  async getDatabases(@Body() dto: NotionTokenDto): Promise<GetDatabasesDto[]> {
     return this.notionService.getDatabases(dto.token);
   }
 
@@ -65,7 +72,15 @@ export class NotionController {
    * }
    */
   @Post('database-properties')
-  async getDatabaseProperties(@Body() dto: DatabasePropertiesDto) {
+  @ApiBody({ type: DatabasePropertiesDto })
+  @ApiResponse({
+    status: 200,
+    description: '取得資料庫屬性結構',
+    type: GetDatabasePropertiesDto,
+  })
+  async getDatabaseProperties(
+    @Body() dto: DatabasePropertiesDto,
+  ): Promise<GetDatabasePropertiesDto> {
     return this.notionService.getDatabaseProperties(dto.token, dto.databaseId);
   }
 
@@ -92,7 +107,15 @@ export class NotionController {
    * }
    */
   @Post('query')
-  async queryDatabase(@Body() dto: QueryDatabaseDto) {
+  @ApiBody({ type: QueryDatabaseDto })
+  @ApiResponse({
+    status: 200,
+    description: '查詢資料庫內容',
+    type: QueryDatabaseResultDto,
+  })
+  async queryDatabase(
+    @Body() dto: QueryDatabaseDto,
+  ): Promise<QueryDatabaseResultDto> {
     return this.notionService.queryDatabase(
       dto.token,
       dto.databaseId,

@@ -7,8 +7,15 @@ import {
   Param,
   Query,
 } from '@nestjs/common';
+import { ApiTags, ApiBody, ApiResponse, ApiOkResponse } from '@nestjs/swagger';
 import { SnapshotService } from './snapshot.service';
-import { CreateQuerySnapshotDto } from './dto/snapshot.dto';
+import {
+  CreateQuerySnapshotDto,
+  QuerySnapshotResultDto,
+  SnapshotDto,
+  QuerySnapshotDto,
+} from './dto';
+import { QuerySnapshot, QuerySnapshotResult, Snapshot } from './interface';
 
 /**
  * 快照控制器
@@ -19,6 +26,7 @@ import { CreateQuerySnapshotDto } from './dto/snapshot.dto';
  *
  * 動態快照儲存查詢參數而非靜態資料，確保資料即時性
  */
+@ApiTags('snapshots')
 @Controller('snapshots')
 export class SnapshotController {
   /**
@@ -28,18 +36,6 @@ export class SnapshotController {
    * @param snapshotService - 快照服務實例
    */
   constructor(private readonly snapshotService: SnapshotService) {}
-
-  /**
-   * 根據 ID 取得特定的快照資料
-   *
-   * @route GET /snapshots/:id
-   * @param id - 快照的唯一識別碼
-   * @returns 完整的快照資料物件
-   * @throws NotFoundException - 當指定的快照不存在時
-   *
-   * @example
-   * GET /snapshots/chart_1753782323871_766ab85a
-   */
 
   /**
    * 建立動態查詢快照
@@ -62,7 +58,15 @@ export class SnapshotController {
    * }
    */
   @Post('query')
-  async createQuerySnapshot(@Body() dto: CreateQuerySnapshotDto) {
+  @ApiBody({ type: CreateQuerySnapshotDto })
+  @ApiResponse({
+    status: 201,
+    description: '建立動態快照成功',
+    type: QuerySnapshotResultDto,
+  })
+  async createQuerySnapshot(
+    @Body() dto: CreateQuerySnapshotDto,
+  ): Promise<QuerySnapshotResult> {
     return this.snapshotService.createQuerySnapshot(dto);
   }
 
@@ -79,7 +83,11 @@ export class SnapshotController {
    * GET /snapshots/query/query_1753782323871_766ab85a
    */
   @Get('query/:id')
-  async executeQuerySnapshot(@Param('id') id: string) {
+  @ApiOkResponse({
+    description: '取得動態快照的資料',
+    type: SnapshotDto,
+  })
+  async executeQuerySnapshot(@Param('id') id: string): Promise<Snapshot> {
     return this.snapshotService.executeQuerySnapshot(id);
   }
 
@@ -96,7 +104,13 @@ export class SnapshotController {
    * GET /snapshots/query/query_1753782323871_766ab85a/config
    */
   @Get('query/:id/config')
-  async getQuerySnapshotConfig(@Param('id') id: string) {
+  @ApiOkResponse({
+    description: '取得動態快照的設定（不含敏感資料）',
+    type: QuerySnapshotDto,
+  })
+  async getQuerySnapshotConfig(
+    @Param('id') id: string,
+  ): Promise<Omit<QuerySnapshot, 'encryptedToken'>> {
     const querySnapshot = await this.snapshotService.getQuerySnapshot(id);
 
     // 移除敏感資料後返回設定

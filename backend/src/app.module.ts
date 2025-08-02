@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { NotionModule } from './notion/notion.module';
-import { SnapshotModule } from './snapshot/snapshot.module';
-import { HealthModule } from './health/health.module';
+import { NotionModule } from './notion';
+import { SnapshotModule } from './snapshot';
+import { HealthModule } from './health';
+import { LoggingMiddleware } from './common';
 
 /**
  * 應用程式的根模組。
@@ -23,4 +24,13 @@ import { HealthModule } from './health/health.module';
     HealthModule,
   ],
 })
-export class AppModule {}
+export class AppModule {
+  /**
+   * 設定中介軟體，將 LoggingMiddleware 應用於所有路由。
+   *
+   * @param {MiddlewareConsumer} consumer - NestJS 的 MiddlewareConsumer，用於配置中介軟體。
+   */
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggingMiddleware).forRoutes('*');
+  }
+}

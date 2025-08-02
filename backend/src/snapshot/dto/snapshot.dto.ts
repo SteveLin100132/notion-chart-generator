@@ -1,115 +1,110 @@
+import { Snapshot } from '../interface';
 import {
-  IsArray,
   IsString,
   IsNotEmpty,
   IsBoolean,
   IsOptional,
+  isObject,
+  IsObject,
+  IsNumber,
 } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
- * 圖表資料傳輸物件
- *
- * 定義圖表中單一資料點的結構，用於驗證和傳輸圖表資料
- * 每個資料點包含 x 軸、y 軸值和標籤等資訊
+ * 圖表快照 DTO
+ * 對應儲存於檔案系統的圖表快照資料
  */
-export class ChartDataDto {
-  /** X 軸資料值 (通常為類別或時間) */
+export class SnapshotDto implements Snapshot {
+  /** 快照唯一識別碼 */
   @IsString()
-  x: string;
-
-  /** Y 軸數值資料 */
-  @IsString()
-  y: number;
-
-  /** 資料點的顯示標籤 */
-  @IsString()
-  label: string;
-
+  @IsNotEmpty()
+  @ApiProperty({
+    description: '快照唯一識別碼',
+    example: 'query_1753782323871_766ab85a',
+  })
+  id!: string;
   /**
-   * 聚合函數類型 (可選)
-   * 如: sum, avg, count, max, min 等
+   * 圖表資料陣列
    */
-  @IsOptional()
-  @IsString()
-  aggregateFunction?: string;
-
-  /** 原始資料筆數 (可選) */
-  @IsOptional()
-  originalCount?: number;
-
-  /** 值的計數 (可選) */
-  @IsOptional()
-  valueCount?: number;
-}
-
-/**
- * 查詢參數快照資料傳輸物件
- *
- * 用於建立基於查詢參數的動態快照
- * 儲存查詢條件而非靜態資料，確保資料即時性
- */
-export class CreateQuerySnapshotDto {
-  /** Notion 資料庫 ID */
-  @IsString()
+  @IsObject()
   @IsNotEmpty()
-  databaseId: string;
-
-  /** Notion API Token (加密儲存) */
-  @IsString()
-  @IsNotEmpty()
-  notionToken: string;
-
-  /** X 軸屬性 ID */
-  @IsString()
-  @IsNotEmpty()
-  xProperty: string;
-
-  /** Y 軸屬性 ID */
-  @IsString()
-  @IsNotEmpty()
-  yProperty: string;
-
+  @ApiProperty({
+    description: '圖表資料陣列',
+    example: [
+      { x: 'A', y: 10 },
+      { x: 'B', y: 20 },
+    ],
+  })
+  data!: any[];
   /**
-   * 圖表類型
-   * 如: bar(長條圖), line(折線圖), pie(圓餅圖), radar(雷達圖) 等
+   * 圖表類型 (如: bar, line, pie 等)
    */
   @IsString()
   @IsNotEmpty()
-  chartType: string;
-
+  @ApiProperty({
+    description: '圖表類型 (如: bar, line, pie 等)',
+    example: 'bar',
+  })
+  chartType!: string;
   /**
-   * 聚合函數
-   * 資料聚合的方式，如: sum(總和), avg(平均), count(計數) 等
+   * 聚合函數類型 (如: sum, avg, count 等)
    */
   @IsString()
   @IsNotEmpty()
-  aggregateFunction: string;
-
-  /** 圖表標題 */
+  @ApiProperty({
+    description: '聚合函數類型 (如: sum, avg, count 等)',
+    example: 'sum',
+  })
+  aggregateFunction!: string;
+  /**
+   * 圖表標題
+   */
   @IsString()
   @IsNotEmpty()
-  title: string;
-
+  @ApiProperty({
+    description: '圖表標題',
+    example: '動態銷售統計圖',
+  })
+  title!: string;
   /**
-   * 快照模式
-   * dynamic: 動態快照 (即時查詢)
+   * 是否為示範資料
    */
-  @IsOptional()
-  @IsString()
-  snapshotMode?: 'dynamic';
-
-  /**
-   * 是否為示範資料 (可選)
-   * 用於標記測試或範例資料，預設為 false
-   */
-  @IsOptional()
   @IsBoolean()
-  isDemo?: boolean;
-
+  @ApiProperty({
+    description: '是否為示範資料',
+    example: false,
+    default: false,
+  })
+  isDemo!: boolean;
   /**
-   * 篩選條件 (可選)
-   * 用於過濾資料庫查詢結果的條件
+   * 建立時間戳記
    */
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty({
+    description: '建立時間戳記',
+    example: 1753782323871,
+  })
+  timestamp!: number;
+  /**
+   * 建立日期 (ISO 字串格式)
+   */
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    description: '建立日期 (ISO 字串格式)',
+    example: '2025-08-02T12:00:00.000Z',
+  })
+  createdAt!: string;
+  /**
+   * 原始資料庫資料（用於資料表格顯示）
+   */
+  @IsObject()
   @IsOptional()
-  filters?: any;
+  @ApiPropertyOptional({
+    description: '原始資料庫資料（用於資料表格顯示）',
+    example: [{ id: 1, name: 'A' }],
+    default: undefined,
+  })
+  rawData?: any[];
 }
