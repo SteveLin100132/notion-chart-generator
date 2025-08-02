@@ -1,3 +1,4 @@
+import { Log4jsLoggerModule, Log4jsLoggerService } from './../logger';
 import { Module } from '@nestjs/common';
 import { SnapshotController } from './snapshot.controller';
 import { SnapshotService } from './snapshot.service';
@@ -15,11 +16,14 @@ import { NotionModule } from '../notion/notion.module';
  * @module SnapshotModule
  */
 @Module({
-  /** 導入必要的模組 */
-  imports: [NotionModule],
-  /** 註冊控制器 - 處理 HTTP 請求和回應 */
+  imports: [Log4jsLoggerModule, NotionModule],
   controllers: [SnapshotController],
-  /** 註冊服務提供者 - 處理商業邏輯和資料操作 */
-  providers: [SnapshotService],
+  providers: [
+    SnapshotService,
+    {
+      provide: Log4jsLoggerService,
+      useFactory: () => new Log4jsLoggerService('Snapshot'),
+    },
+  ],
 })
 export class SnapshotModule {}

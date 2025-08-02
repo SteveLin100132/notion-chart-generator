@@ -2,7 +2,12 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ResponseInterceptor } from './common';
+import {
+  AllExceptionsFilter,
+  prometheusRegistry,
+  ResponseInterceptor,
+} from './common';
+import { Log4jsLoggerService } from './logger';
 
 /**
  * 初始化並配置 NestJS 應用程式。
@@ -22,6 +27,9 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true, // 允許攜帶認證信息
   });
+
+  // 設定全域中介軟體，使用 log4js 記錄 API 請求與回應
+  app.useLogger(new Log4jsLoggerService());
 
   // 全局驗證管道
   app.useGlobalPipes(
@@ -51,8 +59,17 @@ async function bootstrap() {
     },
   });
 
-  // 設定全域攔截器與例外處理
+  // 設定全域攔截器
   app.useGlobalInterceptors(new ResponseInterceptor());
+
+  // 設定全域異常過濾器
+  app.useGlobalFilters(new AllExceptionsFilter());
+
+  // 提供 /metrics endpoint 讓 Prometheus 抓取 metrics
+  app.use('/metrics', async (req, res) => {
+    res.setHeader('Content-Type', prometheusRegistry.contentType);
+    res.end(await prometheusRegistry.metrics());
+  });
 
   // API 前綴
   app.setGlobalPrefix('api');

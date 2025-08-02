@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, LoggerService } from '@nestjs/common';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,6 +12,7 @@ import {
 import { CreateQuerySnapshotDto } from './dto';
 import { NotionService } from '../notion/notion.service';
 import { Snapshot, QuerySnapshot, QuerySnapshotResult } from './interface';
+import { Log4jsLoggerService } from '../logger';
 
 /**
  * 快照服務類別
@@ -42,9 +43,12 @@ export class SnapshotService {
    * 建構函數
    * 初始化服務並確保快照目錄存在
    *
-   * @param snapshotService - 快照服務實例
+   * @param notionService - Notion 服務實例，用於查詢 Notion 資料庫
    */
-  constructor(private readonly notionService: NotionService) {
+  constructor(
+    private readonly logger: Log4jsLoggerService,
+    private readonly notionService: NotionService,
+  ) {
     this.ensureSnapshotDir();
     this.ensureQuerySnapshotDir();
   }
@@ -223,7 +227,7 @@ export class SnapshotService {
           rawData: rawData, // 包含原始資料
         };
       } catch (error) {
-        console.error('Query snapshot execution error:', error);
+        this.logger.error('Query snapshot execution error:', error);
         throw new Error(`Failed to execute query snapshot: ${error.message}`);
       }
     }
@@ -253,7 +257,7 @@ export class SnapshotService {
     filters?: any,
   ): Promise<{ processedData: any[]; rawData: any[] }> {
     try {
-      console.log('Querying Notion database with raw data:', {
+      this.logger.log('Querying Notion database with raw data:', {
         databaseId,
         xProperty,
         yProperty,
@@ -263,7 +267,7 @@ export class SnapshotService {
 
       // 記錄篩選條件的詳細資訊
       if (filters) {
-        console.log('Filter details:', JSON.stringify(filters, null, 2));
+        this.logger.log('Filter details:', JSON.stringify(filters, null, 2));
       }
 
       // 查詢資料庫資料 - 獲取所有資料
@@ -284,15 +288,15 @@ export class SnapshotService {
         hasMore = response.has_more;
         nextCursor = response.next_cursor;
 
-        console.log(
+        this.logger.log(
           `Fetched ${response.results.length} records, total: ${allData.length}`,
         );
       }
 
-      console.log(`Total records fetched: ${allData.length}`);
+      this.logger.log(`Total records fetched: ${allData.length}`);
 
       if (allData.length === 0) {
-        console.warn('No data found in database');
+        this.logger.warn('No data found in database');
         return { processedData: [], rawData: [] };
       }
 
@@ -305,12 +309,12 @@ export class SnapshotService {
         aggregateFunction,
       );
 
-      console.log(`Processed data: ${processedData.length} items`);
-      console.log(`Raw data: ${allData.length} items`);
+      this.logger.log(`Processed data: ${processedData.length} items`);
+      this.logger.log(`Raw data: ${allData.length} items`);
 
       return { processedData, rawData: allData };
     } catch (error) {
-      console.error('Error querying Notion database with raw data:', error);
+      this.logger.error('Error querying Notion database with raw data:', error);
       throw new Error(`Failed to query Notion database: ${error.message}`);
     }
   }
@@ -343,7 +347,7 @@ export class SnapshotService {
     const isCountMode =
       yAxisProperty === '__count__' || aggregateFunction === 'COUNT';
 
-    console.log('Processing data with:', {
+    this.logger.log('Processing data with:', {
       xAxisProperty,
       yAxisProperty,
       aggregateFunction,
@@ -356,7 +360,7 @@ export class SnapshotService {
       const properties = item.properties;
 
       if (!properties) {
-        console.warn(`Item ${index} has no properties`);
+        this.logger.warn(`Item ${index} has no properties`);
         return;
       }
 
@@ -377,10 +381,6 @@ export class SnapshotService {
           yValue = 0;
         }
       }
-
-      let labelValue = labelProperty
-        ? this.extractPropertyValue(properties[labelProperty])
-        : xValue;
 
       // 確保 X 軸是字串
       if (typeof xValue !== 'string') {
@@ -434,7 +434,7 @@ export class SnapshotService {
       });
     });
 
-    console.log('Final processed data:', processedData);
+    this.logger.log('Final processed data:', processedData);
     return processedData;
   }
 

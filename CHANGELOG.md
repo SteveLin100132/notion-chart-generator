@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.1.3] - 2025-08-02
 
 ### Refactored
 
@@ -13,27 +13,29 @@
   - Service 層方法簽名全面型別化，回傳型別與 DTO 對齊。
   - Health 檢查 API 改為回傳 HealthStatusDto，並加上 Swagger 文件。
 
-### Enhanced
-
-- **Swagger/OpenAPI 文件自動化**
-  - main.ts 新增 SwaggerModule 設定，API 文件可於根目錄與 /swagger-json 取得。
-  - 所有 API 端點皆有完整 Swagger 文件與範例。
-
 ### Added
 
 - **依據 interface/DTO 結構補齊/新增所有 index.ts 匯出檔案**
 
-  - notion/snapshot/health 目錄下皆有 index.ts，統一匯出所有 DTO/interface/module/service/controller。
+### Enhanced
 
-- **全域攔截器 (ResponseInterceptor) 新增**
+- **Swagger/OpenAPI 文件自動化與全域攔截器**
 
-  - backend main.ts 新增 ResponseInterceptor 作為全域攔截器，統一 API 回應格式，提升前後端協作一致性。
+  - main.ts 新增 SwaggerModule 設定，API 文件可於根目錄與 /swagger-json 取得。
+  - 設定全域 ResponseInterceptor，統一 API 回應格式，並於 main.ts 註冊。
+  - 設定全域 AllExceptionsFilter，統一錯誤格式。
+
+- **Prometheus metrics 支援**
+  - main.ts 新增 /metrics endpoint，回傳 Prometheus 格式指標。
+  - prometheusRegistry 於 common 匯出。
 
 ### Dependency
 
 - **後端依賴套件升級/補齊**
 
   - 新增 @nestjs/swagger、swagger-ui-express 及其型別定義於 backend。
+  - 新增 log4js, prom-client 於 backend/package.json。
+  - package-lock.json 已同步更新。
   - package.json/package-lock.json 已同步更新。
 
 ## [1.1.2] - 2025-08-02
