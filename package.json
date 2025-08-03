@@ -1,6 +1,6 @@
 {
   "name": "notion-chart-generator",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Notion Chart Generator - 現代化的資料視覺化工具",
   "main": "index.js",
   "directories": {
