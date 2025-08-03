@@ -584,7 +584,7 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
         );
       case 'date':
         if (condition.operator === 'between') {
-          // 檢查結束日期不可早於開始日期
+          // 檢查結束日期不可早於開始日期，於任一日期變動時即時顯示錯誤
           const start = condition.value ? new Date(condition.value as string) : null;
           const end = condition.endValue ? new Date(condition.endValue as string) : null;
           const invalid = start && end && end < start;
@@ -593,12 +593,7 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
               <DatePicker
                 value={condition.value as string || ''}
                 onChange={(value) => {
-                  // 若新的開始日期大於目前結束日期，則自動清空結束日期
-                  if (condition.endValue && value && new Date(value) > new Date(condition.endValue as string)) {
-                    updateCondition(groupId, condition.id, { value, endValue: '' });
-                  } else {
-                    updateCondition(groupId, condition.id, { value });
-                  }
+                  updateCondition(groupId, condition.id, { value });
                 }}
                 placeholder="開始日期"
                 className="w-36"
@@ -607,7 +602,6 @@ export const QueryBuilder: React.FC<QueryBuilderProps> = ({
               <DatePicker
                 value={condition.endValue as string || ''}
                 onChange={(value) => {
-                  // 允許設置任何日期，讓驗證邏輯處理錯誤
                   updateCondition(groupId, condition.id, { endValue: value });
                 }}
                 placeholder="結束日期"
