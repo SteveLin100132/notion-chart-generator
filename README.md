@@ -7,6 +7,7 @@
     <img src="https://img.shields.io/badge/Next.js-14+-black.svg" />
     <img src="https://img.shields.io/badge/NestJS-10+-e0234e.svg" />
     <img src="https://img.shields.io/badge/TailwindCSS-3+-38bdf8.svg" />
+    <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2FSteveLin100132%2Fnotion-chart-generator"><img src="https://api.visitorbadge.io/api/combined?path=https%3A%2F%2Fgithub.com%2FSteveLin100132%2Fnotion-chart-generator&countColor=%23263759&style=flat" /></a>
   </div>
 </div>
 

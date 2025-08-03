@@ -76,7 +76,9 @@ export const SettingsPanel: React.FC = () => {
   }
 
   const handleDatabaseSelect = async (databaseId: string) => {
+
     setSelectedDatabase(databaseId)
+    setFilterGroups([]) // 切換資料庫時清空進階篩選條件
     setError(null)
 
     try {
