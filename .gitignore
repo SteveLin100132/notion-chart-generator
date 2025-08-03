@@ -15,6 +15,10 @@ backend/dist/
 .env.test.local
 .env.production.local
 
+# 測試相關
+playwright-report/
+test-results/
+
 # 日誌
 *.log
 logs/

@@ -1,6 +1,6 @@
 {
   "name": "notion-chart-generator",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "Notion Chart Generator - 現代化的資料視覺化工具",
   "main": "index.js",
   "directories": {
@@ -30,7 +30,12 @@
   "author": "Steve CY Lin",
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "^24.1.0",
     "concurrently": "^8.2.2",
     "rimraf": "^6.0.1"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.54.2",
+    "dotenv": "^17.2.1"
   }
 }
