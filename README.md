@@ -1,6 +1,17 @@
 <div align="center">
-  <img src="assets/images/notion-chart-generator-logo.png" width="100" />
-  <h1>Notion Chart Generator</h1>
+  <!-- <img src="assets/images/notion-chart-generator-logo.png" width="100" /> -->
+  <img src="assets/images/notion-chart-generator-title.png" />
+  <br />
+  <br />
+  <i>
+    一個採用現代前後端分離架構的 Web 應用程式，使用 NestJS + Next.js 技術棧，能夠連接 Notion 資料庫並將資料轉換為互動式圖表。支援多種圖表類型、資料聚合計算、即時分享和跨平台嵌入功能。
+  </i>
+  <br />
+  <br />
+
+![Notion Chart Generator Usage Demo](assets/images/notion-chart-generator-usage-demo.gif)
+
+  <br />
   <div>
     <img src="https://img.shields.io/github/package-json/v/stevelin100132/notion-chart-generator">
     <img src="https://img.shields.io/badge/React-18+-61dafb.svg" />
@@ -12,11 +23,9 @@
 </div>
 
 <br />
-一個採用現代前後端分離架構的 Web 應用程式，使用 NestJS + Next.js 技術棧，能夠連接 Notion 資料庫並將資料轉換為美觀的互動式圖表。支援多種圖表類型、資料聚合計算、即時分享和跨平台嵌入功能。
-<br />
 <br />
 
-![Notion Chart Generator Usage Demo](assets/images/notion-chart-generator-usage-demo.gif)
+Notion Chart Generator 是一款專為 Notion 使用者打造的圖表生成工具。它能夠連接您的 Notion 資料庫，將原始資料自動轉換為多種互動式圖表，協助您更直觀地分析和展示資訊。無需撰寫程式碼，只需簡單設定，即可快速產生長條圖、線圖、圓餅圖等多種視覺化報表，並支援即時分享與跨平台嵌入，讓資料應用更靈活便利。
 
 ## 主要功能
 
@@ -217,3 +226,7 @@ Query Builder 提供強大且直觀的篩選條件建構功能，讓您能夠建
 - 確認選擇的屬性包含有效資料
 - 檢查 Y 軸 屬性是否為數字類型
 - 確認資料庫中有資料記錄
+
+## Activities
+
+![Alt](https://repobeats.axiom.co/api/embed/cb3faf362bfd9af1b29a17c7b4d948ff63ebe018.svg "Repobeats analytics image")
