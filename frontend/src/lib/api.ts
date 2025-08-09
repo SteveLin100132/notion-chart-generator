@@ -226,8 +226,29 @@ export const dataProcessor = {
         return (
           property.multi_select?.map((item: any) => item.name).join(", ") || ""
         );
+      case "status":
+        return property.status?.name || "";
+      case "people":
+        return property.people?.map((p: any) => p.name).join(", ") || "";
+      case "created_by":
+        return property.created_by?.name || "";
+      case "last_edited_by":
+        return property.last_edited_by?.name || "";
+      case "relation":
+        return `${property.relation?.length || 0} 個關聯`;
+      case "files":
+        return `${property.files?.length || 0} 個檔案`;
+      case "unique_id":
+        return (
+          property.unique_id?.number?.toString() ||
+          property.unique_id?.prefix ||
+          ""
+        );
       case "date":
         return property.date?.start || "";
+      case "created_time":
+      case "last_edited_time":
+        return property[property.type] || "";
       case "checkbox":
         return property.checkbox;
       case "url":

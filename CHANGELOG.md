@@ -1,10 +1,28 @@
 # Changelog
 
+## [1.1.6] - 2025-08-09
+
+### Fixed
+
+- **[聚合計算] Notion 屬性聚合未依選項產生正確結果** ([#21](https://github.com/SteveLin100132/notion-chart-generator/issues/21))
+
+  - 修正 `extractPropertyValue` 函數缺少多種 Notion 屬性類型處理的問題
+  - 新增 `status` 屬性支援：正確提取狀態名稱（如 "進行中"、"已完成"、"待處理"）
+  - 新增 `people` 屬性支援：正確提取人員名稱並以逗號分隔
+  - 新增 `created_by`/`last_edited_by` 屬性支援：正確提取創建者/編輯者名稱
+  - 新增其他屬性類型支援：
+    - `relation` - 關聯屬性：顯示關聯數量
+    - `files` - 檔案屬性：顯示檔案數量
+    - `unique_id` - 唯一 ID 屬性：提取數字或前綴
+    - `created_time`/`last_edited_time` - 時間屬性：提取時間戳
+  - 同步修復前端（`frontend/src/lib/api.ts`）和後端（`backend/src/snapshot/snapshot.service.ts`）
+  - 解決 Issue #21：Status 屬性聚合現在會根據不同狀態選項正確分組統計，不再顯示空白欄位名稱
+
 ## [1.1.5] - 2025-08-03
 
 ### Fixed
 
-- **切換資料庫時自動清空進階篩選條件**
+- **切換資料庫時自動清空進階篩選條件** ([#15](https://github.com/SteveLin100132/notion-chart-generator/issues/15))
 
   - 修正圖表設定頁面，當使用者重新選擇資料庫時，進階篩選（Query Builder 內的條件）會自動清空，避免舊資料庫的篩選條件殘留導致圖表生成錯誤。
   - 完全符合預期行為，提升使用體驗。
