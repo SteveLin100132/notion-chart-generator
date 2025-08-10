@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Menu, X } from "lucide-react";
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -11,14 +11,14 @@ const Navbar: React.FC = () => {
       setIsScrolled(window.scrollY > 50);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      element.scrollIntoView({ behavior: "smooth" });
     }
     setIsMobileMenuOpen(false);
   };
@@ -28,9 +28,7 @@ const Navbar: React.FC = () => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'glass-effect'
-          : 'bg-transparent'
+        isScrolled ? "glass-effect" : "bg-transparent"
       }`}
     >
       <div className="container mx-auto px-4">
@@ -40,9 +38,9 @@ const Navbar: React.FC = () => {
             className="flex items-center space-x-3"
             whileHover={{ scale: 1.05 }}
           >
-            <img 
-              src="/logo.png" 
-              alt="Notion Chart Generator" 
+            <img
+              src="./logo.png"
+              alt="Notion Chart Generator"
               className="w-8 h-8 object-contain"
             />
             <span className="font-bold text-xl text-primary">
@@ -53,19 +51,19 @@ const Navbar: React.FC = () => {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             <button
-              onClick={() => scrollToSection('features')}
+              onClick={() => scrollToSection("features")}
               className="text-text hover:text-primary transition-colors font-medium font-sans"
             >
               特色功能
             </button>
             <button
-              onClick={() => scrollToSection('tech-stack')}
+              onClick={() => scrollToSection("tech-stack")}
               className="text-text hover:text-primary transition-colors font-medium font-sans"
             >
               技術棧
             </button>
             <button
-              onClick={() => scrollToSection('how-to-use')}
+              onClick={() => scrollToSection("how-to-use")}
               className="text-text hover:text-primary transition-colors font-medium font-sans"
             >
               使用說明
@@ -104,19 +102,19 @@ const Navbar: React.FC = () => {
             className="md:hidden bg-white rounded-lg shadow-lg mt-2 p-4 space-y-4"
           >
             <button
-              onClick={() => scrollToSection('features')}
+              onClick={() => scrollToSection("features")}
               className="block w-full text-left text-text hover:text-primary transition-colors font-medium font-sans py-2"
             >
               特色功能
             </button>
             <button
-              onClick={() => scrollToSection('tech-stack')}
+              onClick={() => scrollToSection("tech-stack")}
               className="block w-full text-left text-text hover:text-primary transition-colors font-medium font-sans py-2"
             >
               技術棧
             </button>
             <button
-              onClick={() => scrollToSection('how-to-use')}
+              onClick={() => scrollToSection("how-to-use")}
               className="block w-full text-left text-text hover:text-primary transition-colors font-medium font-sans py-2"
             >
               使用說明
