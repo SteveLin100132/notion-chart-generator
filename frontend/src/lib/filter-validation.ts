@@ -16,7 +16,7 @@ export function validateFilterCondition(
   if (property.type === "date" && condition.operator === "between") {
     // 更安全的日期解析
     const parseDate = (
-      dateStr: string | number | boolean | undefined
+      dateStr: string | number | boolean | string[] | undefined
     ): Date | null => {
       if (!dateStr || typeof dateStr !== "string") return null;
       const date = new Date(dateStr);
