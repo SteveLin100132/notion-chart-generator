@@ -16,7 +16,11 @@
 
 @layer components {
   .glass-effect {
-    @apply backdrop-blur-xl bg-white/40 border border-white/20;
+    @apply backdrop-blur-xl bg-white/60 border border-white/30 shadow-lg;
+  }
+  
+  .glass-effect-no-shadow {
+    @apply backdrop-blur-xl bg-white/60 border border-white/30;
   }
   
   .container {
@@ -25,9 +29,9 @@
   }
   
   .section-padding {
-    @apply py-16 md:py-24;
+    @apply pb-24 md:pb-24;
   }
-  
+
   .animate-on-scroll {
     opacity: 0;
     transform: translateY(30px);

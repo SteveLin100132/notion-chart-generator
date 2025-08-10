@@ -13,10 +13,10 @@ const HeroSection: React.FC = () => {
 
   return (
     <section className="relative min-h-[75vh] overflow-hidden pt-16">
-      {/* Grid Background */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="h-full w-full bg-grid-pattern bg-grid-size animate-pulse-slow"></div>
-      </div>
+      {/* Enhanced Local Grid Background for Hero */}
+      {/* <div className="absolute inset-0 opacity-20">
+        <div className="h-full w-full bg-grid-pattern-hero bg-grid-size animate-pulse-slow"></div>
+      </div> */}
 
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-transparent to-gray-50/80"></div>

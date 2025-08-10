@@ -38,8 +38,11 @@ export default {
       },
       backgroundImage: {
         'grid-pattern': `
-          linear-gradient(rgba(34, 37, 41, 0.1) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(34, 37, 41, 0.1) 1px, transparent 1px)
+          linear-gradient(rgba(34, 37, 41, 0.15) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(34, 37, 41, 0.15) 1px, transparent 1px)
+        `,
+        'radial-fade-overlay': `
+          radial-gradient(ellipse at center, transparent 0%, transparent 30%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.6) 70%, rgba(255, 255, 255, 0.9) 90%, rgba(255, 255, 255, 1) 100%)
         `,
       },
       backgroundSize: {
