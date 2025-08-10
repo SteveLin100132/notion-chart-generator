@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.1.7] - 2025-08-10
+
+### Fixed
+
+- **[進階篩選設定] Multi_select 欄位篩選無法生成圖表錯誤修復** ([#23](https://github.com/SteveLin100132/notion-chart-generator/issues/23))
+
+  - 修正 `multi_select` 類型屬性在進階篩選中使用「包含」和「不包含」操作符時產生的 Notion API 驗證錯誤
+  - 問題根因：Notion API 要求 `multi_select.contains` 必須是字串值，但前端傳送陣列值 `["前端","後端"]`
+  - 解決方案：
+    - 更新 `FilterCondition` 介面，支援陣列值類型 (`string | number | boolean | string[]`)
+    - 改進 `convertToNotionFilter` 函數中的轉換邏輯，將 `multi_select` 的陣列值正確轉換為多個 `contains` 條件的 `or` 組合
+    - 區分 `select` 和 `multi_select` 的操作符：`select` 使用 `equals`，`multi_select` 使用 `contains`
+    - 添加完整的錯誤處理和邊界情況檢查
+  - 修復檔案：
+    - `frontend/src/components/query-builder.tsx` - 核心轉換邏輯修復
+    - `frontend/src/lib/filter-validation.ts` - 類型定義更新
+  - 現在 `multi_select` 欄位的進階篩選可正常生成圖表，不再出現 API 驗證錯誤
+
 ## [1.1.6] - 2025-08-09
 
 ### Fixed
