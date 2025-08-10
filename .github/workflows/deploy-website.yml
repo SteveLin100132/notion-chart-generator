@@ -1,0 +1,65 @@
+name: Deploy Website to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master # 當推送到 master 分支時觸發
+    paths:
+      - "website/**" # 只有當 website 目錄有變更時才觸發
+  workflow_dispatch: # 允許手動觸發
+
+# 設定 GITHUB_TOKEN 的權限
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 確保同時只有一個部署任務在執行
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: "website/package-lock.json"
+
+      - name: Install dependencies
+        run: |
+          cd website
+          npm i
+
+      - name: Build website
+        run: |
+          cd website
+          npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "./website/dist"
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
