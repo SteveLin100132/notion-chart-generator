@@ -1,14 +1,31 @@
-'use client'
+"use client";
 
-import React, { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useNotionStore } from '@/lib/store'
-import { notionApi, dataProcessor, snapshotApi } from '@/lib/api'
-import { BarChart3, TrendingUp, PieChart, Loader2, Target, Link, BarChart, Lightbulb, Filter, CheckCircle } from 'lucide-react'
-import { NotionLogo } from '@/components/ui/notion-logo'
-import { QueryBuilderModal } from '@/components/query-builder-modal'
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useNotionStore } from "@/lib/store";
+import { notionApi, dataProcessor, snapshotApi } from "@/lib/api";
+import {
+  BarChart3,
+  TrendingUp,
+  PieChart,
+  Loader2,
+  Target,
+  Link,
+  BarChart,
+  Lightbulb,
+  Filter,
+  CheckCircle,
+} from "lucide-react";
+import { NotionLogo } from "@/components/ui/notion-logo";
+import { QueryBuilderModal } from "@/components/query-builder-modal";
 
 export const SettingsPanel: React.FC = () => {
   const {
@@ -48,104 +65,119 @@ export const SettingsPanel: React.FC = () => {
     setSnapshotMode,
     currentSnapshotId,
     setCurrentSnapshotId,
-  } = useNotionStore()
+  } = useNotionStore();
 
-  const [isLoadingDatabases, setIsLoadingDatabases] = useState(false)
-  const [isQueryBuilderOpen, setIsQueryBuilderOpen] = useState(false)
+  const [isLoadingDatabases, setIsLoadingDatabases] = useState(false);
+  const [isQueryBuilderOpen, setIsQueryBuilderOpen] = useState(false);
 
   const handleLoadDatabases = async () => {
     if (!token.trim()) {
-      setError('請輸入有效的 Notion Token')
-      return
+      setError("請輸入有效的 Notion Token");
+      return;
     }
 
-    setIsLoadingDatabases(true)
-    setError(null)
+    setIsLoadingDatabases(true);
+    setError(null);
 
     try {
-      const databaseList = await notionApi.getDatabases(token)
-      setDatabases(databaseList)
+      const databaseList = await notionApi.getDatabases(token);
+      setDatabases(databaseList);
       if (databaseList.length === 0) {
-        setError('未找到可訪問的資料庫，請檢查 Token 權限')
+        setError("未找到可訪問的資料庫，請檢查 Token 權限");
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || '載入資料庫失敗，請檢查 Token 是否有效')
+      setError(
+        err.response?.data?.error || "載入資料庫失敗，請檢查 Token 是否有效"
+      );
     } finally {
-      setIsLoadingDatabases(false)
+      setIsLoadingDatabases(false);
     }
-  }
+  };
 
   const handleDatabaseSelect = async (databaseId: string) => {
-
-    setSelectedDatabase(databaseId)
-    setFilterGroups([]) // 切換資料庫時清空進階篩選條件
-    setError(null)
+    setSelectedDatabase(databaseId);
+    setFilterGroups([]); // 切換資料庫時清空進階篩選條件
+    setError(null);
 
     try {
-      const dbInfo = await notionApi.getDatabaseProperties(token, databaseId)
-      setDatabaseProperties(dbInfo.properties)
+      const dbInfo = await notionApi.getDatabaseProperties(token, databaseId);
+      setDatabaseProperties(dbInfo.properties);
     } catch (err: any) {
-      setError(err.response?.data?.error || '載入資料庫屬性失敗')
+      setError(err.response?.data?.error || "載入資料庫屬性失敗");
     }
-  }
+  };
 
   const handleGenerateChart = async () => {
-    console.log('開始生成圖表...')
-    console.log('設定:', { 
-      selectedDatabase, 
-      xAxisProperty, 
-      yAxisProperty, 
-      labelProperty, 
-      aggregateFunction, 
+    console.log("開始生成圖表...");
+    console.log("設定:", {
+      selectedDatabase,
+      xAxisProperty,
+      yAxisProperty,
+      labelProperty,
+      aggregateFunction,
       snapshotMode,
-      filterGroups: filterGroups.length > 0 ? filterGroups : '無篩選條件'
-    })
-    
+      filterGroups: filterGroups.length > 0 ? filterGroups : "無篩選條件",
+    });
+
     if (!selectedDatabase || !xAxisProperty) {
-      setError('請選擇資料庫和 X 軸屬性')
-      return
+      setError("請選擇資料庫和 X 軸屬性");
+      return;
     }
 
     // 檢查是否需要使用 COUNT 模式
-    const hasNumericProperties = getCompatibleProperties(true).length > 0
-    const isCountMode = !yAxisProperty || !hasNumericProperties
-    const actualYAxisProperty = isCountMode ? '__count__' : yAxisProperty
-    const actualAggregateFunction = isCountMode ? 'COUNT' : aggregateFunction
+    const hasNumericProperties = getCompatibleProperties(true).length > 0;
+    const isCountMode = !yAxisProperty || !hasNumericProperties;
+    const actualYAxisProperty = isCountMode ? "__count__" : yAxisProperty;
+    const actualAggregateFunction = isCountMode ? "COUNT" : aggregateFunction;
 
     // 如果是 COUNT 模式，確保聚合函數設為 COUNT
     if (isCountMode) {
-      setAggregateFunction('COUNT')
+      setAggregateFunction("COUNT");
     }
 
-    setIsLoading(true)
-    setError(null)
-    
+    setIsLoading(true);
+    setError(null);
+
     // 重設表格分頁狀態
-    setTableData([])
-    setHasMoreData(false)
-    setNextCursor(null)
+    setTableData([]);
+    setHasMoreData(false);
+    setNextCursor(null);
 
     try {
       // 只使用動態模式
-      await generateDynamicChart(actualYAxisProperty, actualAggregateFunction)
+      await generateDynamicChart(actualYAxisProperty, actualAggregateFunction);
     } catch (err: any) {
-      console.error('生成圖表錯誤:', err)
-      console.error('錯誤詳情:', err.response?.data)
-      setError(err.response?.data?.message || err.message || '生成圖表失敗')
+      console.error("生成圖表錯誤:", err);
+      console.error("錯誤詳情:", err.response?.data);
+      setError(err.response?.data?.message || err.message || "生成圖表失敗");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const generateDynamicChart = async (actualYAxisProperty: string, actualAggregateFunction: string) => {
-    console.log('正在建立動態快照...')
-    
+  const generateDynamicChart = async (
+    actualYAxisProperty: string,
+    actualAggregateFunction: string
+  ) => {
+    console.log("正在建立動態快照...");
+
     try {
       // 轉換篩選條件為Notion API格式
-      const notionFilters = filterGroups.length > 0 ? 
-        await import('@/components/query-builder').then(module => 
-          module.convertToNotionFilter(filterGroups, databaseProperties)
-        ) : undefined
+      const notionFilters =
+        filterGroups.length > 0
+          ? await import("@/components/query-builder").then((module) =>
+              module.convertToNotionFilter(filterGroups, databaseProperties)
+            )
+          : undefined;
+
+      console.log(
+        "Original filterGroups:",
+        JSON.stringify(filterGroups, null, 2)
+      );
+      console.log(
+        "Converted notionFilters:",
+        JSON.stringify(notionFilters, null, 2)
+      );
 
       // 建立動態快照
       const snapshotResponse = await snapshotApi.saveQuerySnapshot({
@@ -159,63 +191,64 @@ export const SettingsPanel: React.FC = () => {
         snapshotMode,
         isDemo: false,
         filters: notionFilters,
-      })
+      });
 
-      console.log('動態快照建立成功:', snapshotResponse)
-      
+      console.log("動態快照建立成功:", snapshotResponse);
+
       // 執行動態查詢以取得資料
-      const chartData = await snapshotApi.executeQuerySnapshot(snapshotResponse.id)
-      console.log('動態查詢執行成功:', chartData)
-      
+      const chartData = await snapshotApi.executeQuerySnapshot(
+        snapshotResponse.id
+      );
+      console.log("動態查詢執行成功:", chartData);
+
       // 更新狀態
-      setChartData(chartData.data)
-      setCurrentSnapshotId(snapshotResponse.id)
-      
+      setChartData(chartData.data);
+      setCurrentSnapshotId(snapshotResponse.id);
+
       // 設置原始資料庫資料供資料表格使用
       if (chartData.rawData && Array.isArray(chartData.rawData)) {
-        console.log('設置原始資料庫資料:', chartData.rawData.length, '筆')
-        setRawDatabaseData(chartData.rawData)
+        console.log("設置原始資料庫資料:", chartData.rawData.length, "筆");
+        setRawDatabaseData(chartData.rawData);
       } else {
-        console.warn('動態快照沒有包含原始資料')
-        setRawDatabaseData([])
+        console.warn("動態快照沒有包含原始資料");
+        setRawDatabaseData([]);
       }
-      
+
       // 更新 URL 以反映當前的動態快照狀態
-      const newUrl = new URL(window.location.href)
-      newUrl.searchParams.set('query', snapshotResponse.id)
-      window.history.pushState({}, '', newUrl.toString())
-      
-      console.log('圖表生成成功（動態模式）！')
-      
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set("query", snapshotResponse.id);
+      window.history.pushState({}, "", newUrl.toString());
+
+      console.log("圖表生成成功（動態模式）！");
     } catch (error) {
-      console.error('動態快照建立失敗:', error)
-      throw error  // 直接拋出錯誤，不再回退到靜態模式
+      console.error("動態快照建立失敗:", error);
+      throw error; // 直接拋出錯誤，不再回退到靜態模式
     }
-  }
+  };
 
   const chartTypeOptions = [
-    { value: 'bar', label: '長條圖', icon: 'BarChart3' },
-    { value: 'line', label: '線圖', icon: 'TrendingUp' },
-    { value: 'pie', label: '圓餅圖', icon: 'PieChart' },
-    { value: 'radar', label: '雷達圖', icon: 'Target' },
-  ]
+    { value: "bar", label: "長條圖", icon: "BarChart3" },
+    { value: "line", label: "線圖", icon: "TrendingUp" },
+    { value: "pie", label: "圓餅圖", icon: "PieChart" },
+    { value: "radar", label: "雷達圖", icon: "Target" },
+  ];
 
   const aggregateFunctionOptions = [
-    { value: 'SUM', label: 'SUM (加總)' },
-    { value: 'AVG', label: 'AVG (平均值)' },
-    { value: 'MIN', label: 'MIN (最小值)' },
-    { value: 'MAX', label: 'MAX (最大值)' },
-    { value: 'COUNT', label: 'COUNT (計數)' },
-  ]
+    { value: "SUM", label: "SUM (加總)" },
+    { value: "AVG", label: "AVG (平均值)" },
+    { value: "MIN", label: "MIN (最小值)" },
+    { value: "MAX", label: "MAX (最大值)" },
+    { value: "COUNT", label: "COUNT (計數)" },
+  ];
 
   const getCompatibleProperties = (forYAxis = false) => {
     if (forYAxis) {
-      return databaseProperties.filter(prop => 
-        ['number', 'formula', 'rollup'].includes(prop.type)
-      )
+      return databaseProperties.filter((prop) =>
+        ["number", "formula", "rollup"].includes(prop.type)
+      );
     }
-    return databaseProperties
-  }
+    return databaseProperties;
+  };
 
   return (
     <div className="w-80 min-w-80 max-w-80 bg-gray-50 border-r border-gray-200 p-6 overflow-y-auto flex-shrink-0">
@@ -239,7 +272,7 @@ export const SettingsPanel: React.FC = () => {
                 className="bg-white border-gray-300 text-gray-900"
               />
             </div>
-            
+
             <Button
               onClick={handleLoadDatabases}
               disabled={isLoadingDatabases || !token.trim()}
@@ -251,7 +284,7 @@ export const SettingsPanel: React.FC = () => {
                   載入中...
                 </>
               ) : (
-                '載入資料庫'
+                "載入資料庫"
               )}
             </Button>
 
@@ -260,7 +293,10 @@ export const SettingsPanel: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   選擇資料庫
                 </label>
-                <Select value={selectedDatabase} onValueChange={handleDatabaseSelect}>
+                <Select
+                  value={selectedDatabase}
+                  onValueChange={handleDatabaseSelect}
+                >
                   <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                     <SelectValue placeholder="選擇資料庫" />
                   </SelectTrigger>
@@ -294,34 +330,36 @@ export const SettingsPanel: React.FC = () => {
                   {chartTypeOptions.map((option) => {
                     const renderIcon = () => {
                       switch (option.icon) {
-                        case 'BarChart3':
-                          return <BarChart3 className="h-5 w-5 mb-1" />
-                        case 'TrendingUp':
-                          return <TrendingUp className="h-5 w-5 mb-1" />
-                        case 'PieChart':
-                          return <PieChart className="h-5 w-5 mb-1" />
-                        case 'Target':
-                          return <Target className="h-5 w-5 mb-1" />
+                        case "BarChart3":
+                          return <BarChart3 className="h-5 w-5 mb-1" />;
+                        case "TrendingUp":
+                          return <TrendingUp className="h-5 w-5 mb-1" />;
+                        case "PieChart":
+                          return <PieChart className="h-5 w-5 mb-1" />;
+                        case "Target":
+                          return <Target className="h-5 w-5 mb-1" />;
                         default:
-                          return null
+                          return null;
                       }
-                    }
-                    
+                    };
+
                     return (
                       <Button
                         key={option.value}
-                        variant={chartType === option.value ? 'default' : 'outline'}
+                        variant={
+                          chartType === option.value ? "default" : "outline"
+                        }
                         onClick={() => setChartType(option.value as any)}
                         className={`flex flex-col items-center p-3 h-auto ${
-                          chartType === option.value 
-                            ? 'bg-black hover:bg-gray-800 text-white' 
-                            : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                          chartType === option.value
+                            ? "bg-black hover:bg-gray-800 text-white"
+                            : "border-gray-300 text-gray-700 hover:bg-gray-50"
                         }`}
                       >
                         {renderIcon()}
                         <span className="text-xs">{option.label}</span>
                       </Button>
-                    )
+                    );
                   })}
                 </div>
               </div>
@@ -336,11 +374,17 @@ export const SettingsPanel: React.FC = () => {
                     <SelectValue placeholder="選擇 X 軸屬性" />
                   </SelectTrigger>
                   <SelectContent>
-                    {getCompatibleProperties().filter(prop => prop.name && prop.name.trim()).map((prop) => (
-                      <SelectItem key={prop.id} value={prop.name} type={prop.type}>
-                        {prop.name} ({prop.type})
-                      </SelectItem>
-                    ))}
+                    {getCompatibleProperties()
+                      .filter((prop) => prop.name && prop.name.trim())
+                      .map((prop) => (
+                        <SelectItem
+                          key={prop.id}
+                          value={prop.name}
+                          type={prop.type}
+                        >
+                          {prop.name} ({prop.type})
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -355,18 +399,25 @@ export const SettingsPanel: React.FC = () => {
                     <SelectValue placeholder="選擇 Y 軸屬性（可選）" />
                   </SelectTrigger>
                   <SelectContent>
-                    {getCompatibleProperties(true).filter(prop => prop.name && prop.name.trim()).map((prop) => (
-                      <SelectItem key={prop.id} value={prop.name} type={prop.type}>
-                        {prop.name} ({prop.type})
-                      </SelectItem>
-                    ))}
+                    {getCompatibleProperties(true)
+                      .filter((prop) => prop.name && prop.name.trim())
+                      .map((prop) => (
+                        <SelectItem
+                          key={prop.id}
+                          value={prop.name}
+                          type={prop.type}
+                        >
+                          {prop.name} ({prop.type})
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
-                {!yAxisProperty && getCompatibleProperties(true).length === 0 && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    沒有可用的數字類型屬性，將使用計數模式
-                  </p>
-                )}
+                {!yAxisProperty &&
+                  getCompatibleProperties(true).length === 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      沒有可用的數字類型屬性，將使用計數模式
+                    </p>
+                  )}
               </div>
 
               {/* 聚合函數 */}
@@ -374,16 +425,30 @@ export const SettingsPanel: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   聚合函數
                 </label>
-                <Select 
-                  value={(!yAxisProperty || getCompatibleProperties(true).length === 0) ? 'COUNT' : aggregateFunction} 
+                <Select
+                  value={
+                    !yAxisProperty || getCompatibleProperties(true).length === 0
+                      ? "COUNT"
+                      : aggregateFunction
+                  }
                   onValueChange={setAggregateFunction}
-                  disabled={!yAxisProperty || getCompatibleProperties(true).length === 0}
+                  disabled={
+                    !yAxisProperty || getCompatibleProperties(true).length === 0
+                  }
                 >
-                  <SelectTrigger className={`bg-white border-gray-300 text-gray-900 ${(!yAxisProperty || getCompatibleProperties(true).length === 0) ? 'opacity-50' : ''}`}>
+                  <SelectTrigger
+                    className={`bg-white border-gray-300 text-gray-900 ${
+                      !yAxisProperty ||
+                      getCompatibleProperties(true).length === 0
+                        ? "opacity-50"
+                        : ""
+                    }`}
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {(!yAxisProperty || getCompatibleProperties(true).length === 0) ? (
+                    {!yAxisProperty ||
+                    getCompatibleProperties(true).length === 0 ? (
                       <SelectItem value="COUNT">COUNT (計數)</SelectItem>
                     ) : (
                       aggregateFunctionOptions.map((option) => (
@@ -394,7 +459,8 @@ export const SettingsPanel: React.FC = () => {
                     )}
                   </SelectContent>
                 </Select>
-                {(!yAxisProperty || getCompatibleProperties(true).length === 0) && (
+                {(!yAxisProperty ||
+                  getCompatibleProperties(true).length === 0) && (
                   <p className="text-xs text-gray-500 mt-1">
                     沒有 Y 軸屬性時僅支援計數聚合函數
                   </p>
@@ -412,11 +478,17 @@ export const SettingsPanel: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">無</SelectItem>
-                    {getCompatibleProperties().filter(prop => prop.name && prop.name.trim()).map((prop) => (
-                      <SelectItem key={prop.id} value={prop.name} type={prop.type}>
-                        {prop.name} ({prop.type})
-                      </SelectItem>
-                    ))}
+                    {getCompatibleProperties()
+                      .filter((prop) => prop.name && prop.name.trim())
+                      .map((prop) => (
+                        <SelectItem
+                          key={prop.id}
+                          value={prop.name}
+                          type={prop.type}
+                        >
+                          {prop.name} ({prop.type})
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -448,8 +520,12 @@ export const SettingsPanel: React.FC = () => {
                         篩選結果
                       </h4>
                       <p className="text-xs text-green-700">
-                        已設定 {filterGroups.length} 個篩選組，
-                        包含 {filterGroups.reduce((total, group) => total + group.conditions.length, 0)} 個條件
+                        已設定 {filterGroups.length} 個篩選組， 包含{" "}
+                        {filterGroups.reduce(
+                          (total, group) => total + group.conditions.length,
+                          0
+                        )}{" "}
+                        個條件
                       </p>
                     </div>
                   ) : (
@@ -468,7 +544,7 @@ export const SettingsPanel: React.FC = () => {
                     disabled={databaseProperties.length === 0}
                   >
                     <Filter className="h-4 w-4 mr-2" />
-                    {filterGroups.length > 0 ? '編輯篩選條件' : '設定篩選條件'}
+                    {filterGroups.length > 0 ? "編輯篩選條件" : "設定篩選條件"}
                   </Button>
                 </div>
               </div>
@@ -485,7 +561,7 @@ export const SettingsPanel: React.FC = () => {
                     生成中...
                   </>
                 ) : (
-                  '生成圖表'
+                  "生成圖表"
                 )}
               </Button>
             </div>
@@ -524,5 +600,5 @@ export const SettingsPanel: React.FC = () => {
         onFilterGroupsChange={setFilterGroups}
       />
     </div>
-  )
-}
+  );
+};
