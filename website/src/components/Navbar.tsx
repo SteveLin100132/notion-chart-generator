@@ -21,7 +21,7 @@ const Navbar: React.FC = () => {
             }}
           >
             <img
-              src="/logo.png"
+              src="./logo.png"
               alt="logo"
               className="w-7 h-7 object-contain"
             />
