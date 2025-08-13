@@ -12,12 +12,7 @@ const HeroSection: React.FC = () => {
   };
 
   return (
-    <section className="relative min-h-[75vh] overflow-hidden pt-16">
-      {/* Enhanced Local Grid Background for Hero */}
-      {/* <div className="absolute inset-0 opacity-20">
-        <div className="h-full w-full bg-grid-pattern-hero bg-grid-size animate-pulse-slow"></div>
-      </div> */}
-
+    <section id="hero" className="relative min-h-[75vh] overflow-hidden pt-16">
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-transparent to-gray-50/80"></div>
 
@@ -77,7 +72,7 @@ const HeroSection: React.FC = () => {
               <Button
                 size="lg"
                 onClick={scrollToFeatures}
-                className="group shadow-lg hover:shadow-xl transition-all duration-300"
+                className="group rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 開始探索
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -92,7 +87,7 @@ const HeroSection: React.FC = () => {
                     "_blank"
                   )
                 }
-                className="backdrop-blur-sm bg-white/10 border-white/20 text-gray-700 hover:bg-gray-100 hover:text-gray-900 hover:border-gray-300 transition-all duration-300"
+                className="backdrop-blur-sm rounded-full bg-white/10 border-white/20 text-gray-700 hover:bg-gray-100 hover:text-gray-900 hover:border-gray-300 transition-all duration-300"
               >
                 查看原始碼
               </Button>
