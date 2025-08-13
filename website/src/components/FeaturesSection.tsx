@@ -939,7 +939,7 @@ const FeaturesSection: React.FC = () => {
                 href="https://github.com/SteveLin100132/notion-chart-generator"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black font-semibold rounded-lg hover:bg-gray-100 transition-all duration-300 group"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-100 transition-all duration-300 group"
               >
                 <svg
                   className="w-5 h-5 group-hover:scale-110 transition-transform duration-300"

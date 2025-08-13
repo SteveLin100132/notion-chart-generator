@@ -1,8 +1,21 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Copy, CheckCircle, Play, Download, Settings, Share2 } from 'lucide-react';
-import { Button } from './ui/Button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card';
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Copy,
+  CheckCircle,
+  Play,
+  Download,
+  Settings,
+  Share2,
+} from "lucide-react";
+import { Button } from "./ui/Button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/Card";
 
 const HowToUseSection: React.FC = () => {
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
@@ -16,77 +29,84 @@ const HowToUseSection: React.FC = () => {
   const steps = [
     {
       number: 1,
-      title: '安裝與設定',
-      description: '使用 Docker 快速部署，或者從源碼編譯安裝',
+      title: "安裝與設定",
+      description: "使用 Docker 快速部署，或者從源碼編譯安裝",
       icon: Download,
       content: {
-        docker: 'docker run -p 3000:3000 stevelin100132/notion-chart-generator',
-        git: 'git clone https://github.com/SteveLin100132/notion-chart-generator.git'
-      }
+        docker: "docker run -p 3000:3000 stevelin100132/notion-chart-generator",
+        git: "git clone https://github.com/SteveLin100132/notion-chart-generator.git",
+      },
     },
     {
       number: 2,
-      title: '配置 Notion 整合',
-      description: '設定 Notion API 金鑰，並選擇要連接的資料庫',
+      title: "配置 Notion 整合",
+      description: "設定 Notion API 金鑰，並選擇要連接的資料庫",
       icon: Settings,
       content: {
-        env: 'NOTION_API_KEY=your_notion_api_key\nNOTION_DATABASE_ID=your_database_id'
-      }
+        env: "NOTION_API_KEY=your_notion_api_key\nNOTION_DATABASE_ID=your_database_id",
+      },
     },
     {
       number: 3,
-      title: '選擇圖表類型',
-      description: '根據你的資料特性，選擇最適合的圖表類型',
+      title: "選擇圖表類型",
+      description: "根據你的資料特性，選擇最適合的圖表類型",
       icon: Play,
-      features: ['長條圖', '圓餅圖', '折線圖', '散佈圖', '熱力圖']
+      features: ["長條圖", "圓餅圖", "折線圖", "散佈圖", "熱力圖"],
     },
     {
       number: 4,
-      title: '分享與嵌入',
-      description: '生成分享連結或 iframe 代碼，輕鬆整合到其他平台',
+      title: "分享與嵌入",
+      description: "生成分享連結或 iframe 代碼，輕鬆整合到其他平台",
       icon: Share2,
       content: {
-        iframe: '<iframe src="https://your-domain.com/chart/123" width="600" height="400"></iframe>'
-      }
-    }
+        iframe:
+          '<iframe src="https://your-domain.com/chart/123" width="600" height="400"></iframe>',
+      },
+    },
   ];
 
   const deploymentMethods = [
     {
-      title: 'Docker 部署',
-      description: '最簡單的部署方式，適合快速體驗',
+      title: "Docker 部署",
+      description: "最簡單的部署方式，適合快速體驗",
       commands: [
-        'docker pull stevelin100132/notion-chart-generator',
-        'docker run -d -p 3000:3000 --name notion-chart stevelin100132/notion-chart-generator'
+        "docker pull stevelin100132/notion-chart-generator",
+        "docker run -d -p 3000:3000 --name notion-chart stevelin100132/notion-chart-generator",
       ],
-      icon: '🐳'
+      icon: "🐳",
     },
     {
-      title: '原始碼部署',
-      description: '適合開發者進行自定義修改',
+      title: "原始碼部署",
+      description: "適合開發者進行自定義修改",
       commands: [
-        'git clone https://github.com/SteveLin100132/notion-chart-generator.git',
-        'cd notion-chart-generator',
-        'npm install',
-        'npm run build',
-        'npm start'
+        "git clone https://github.com/SteveLin100132/notion-chart-generator.git",
+        "cd notion-chart-generator",
+        "npm install",
+        "npm run build",
+        "npm start",
       ],
-      icon: '⚡'
+      icon: "⚡",
     },
     {
-      title: 'Kubernetes 部署',
-      description: '適合生產環境的大規模部署',
+      title: "Kubernetes 部署",
+      description: "適合生產環境的大規模部署",
       commands: [
-        'kubectl apply -f k8s/',
-        'kubectl get pods',
-        'kubectl port-forward svc/notion-chart-generator 3000:3000'
+        "kubectl apply -f k8s/",
+        "kubectl get pods",
+        "kubectl port-forward svc/notion-chart-generator 3000:3000",
       ],
-      icon: '☸️'
-    }
+      icon: "☸️",
+    },
   ];
 
   return (
     <section id="how-to-use" className="section-padding bg-white">
+      {/* Section Divider - 流星線條 */}
+      <div className="relative mb-20 flex flex-col items-center">
+        {/* 主分界線 */}
+        <div className="w-full max-w-6xl h-px bg-gradient-to-r from-transparent via-gray-500 to-transparent opacity-40"></div>
+      </div>
+
       <div className="container">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -96,7 +116,13 @@ const HowToUseSection: React.FC = () => {
           className="text-center max-w-3xl mx-auto mb-16"
         >
           <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6">
-            如何使用
+            如何
+            <span className="relative inline-block px-3 py-1 mx-1">
+              <span className="absolute inset-0 bg-black transform -rotate-2 rounded-md"></span>
+              <span className="relative inline-block text-white font-bold transform -rotate-2">
+                使用
+              </span>
+            </span>
           </h2>
           <p className="text-xl text-secondary leading-relaxed">
             簡單四個步驟，讓你快速上手 Notion Chart Generator。
@@ -141,7 +167,9 @@ const HowToUseSection: React.FC = () => {
                             size="sm"
                             variant="ghost"
                             className="absolute top-2 right-2"
-                            onClick={() => copyToClipboard(value, `${step.number}-${key}`)}
+                            onClick={() =>
+                              copyToClipboard(value, `${step.number}-${key}`)
+                            }
                           >
                             {copiedCommand === `${step.number}-${key}` ? (
                               <CheckCircle className="w-4 h-4 text-green-500" />
@@ -212,7 +240,12 @@ const HowToUseSection: React.FC = () => {
                             size="sm"
                             variant="ghost"
                             className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => copyToClipboard(command, `deploy-${index}-${cmdIndex}`)}
+                            onClick={() =>
+                              copyToClipboard(
+                                command,
+                                `deploy-${index}-${cmdIndex}`
+                              )
+                            }
                           >
                             {copiedCommand === `deploy-${index}-${cmdIndex}` ? (
                               <CheckCircle className="w-3 h-3 text-green-500" />
@@ -242,22 +275,32 @@ const HowToUseSection: React.FC = () => {
             準備開始了嗎？
           </h3>
           <p className="text-secondary text-lg mb-6 max-w-2xl mx-auto">
-            立即體驗 Notion Chart Generator，將你的 Notion 資料轉換成精美的圖表。
-            開源免費，支援多種部署方式。
+            立即體驗 Notion Chart Generator，將你的 Notion
+            資料轉換成精美的圖表。 開源免費，支援多種部署方式。
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"
-              onClick={() => window.open('https://github.com/SteveLin100132/notion-chart-generator', '_blank')}
+              onClick={() =>
+                window.open(
+                  "https://github.com/SteveLin100132/notion-chart-generator",
+                  "_blank"
+                )
+              }
             >
               查看 GitHub 專案
             </Button>
             <Button
               variant="outline"
               size="lg"
-              onClick={() => copyToClipboard('docker run -p 3000:3000 stevelin100132/notion-chart-generator', 'cta-docker')}
+              onClick={() =>
+                copyToClipboard(
+                  "docker run -p 3000:3000 stevelin100132/notion-chart-generator",
+                  "cta-docker"
+                )
+              }
             >
-              {copiedCommand === 'cta-docker' ? '已複製！' : '複製 Docker 指令'}
+              {copiedCommand === "cta-docker" ? "已複製！" : "複製 Docker 指令"}
             </Button>
           </div>
         </motion.div>
