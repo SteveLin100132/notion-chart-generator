@@ -1,6 +1,15 @@
 import React from "react";
 import { motion } from "framer-motion";
 import {
+  CameraIcon,
+  HeartIcon,
+  ArchiveBoxIcon,
+  AdjustmentsHorizontalIcon,
+  ShareIcon,
+  ChartPieIcon,
+  TableCellsIcon,
+} from "@heroicons/react/24/outline";
+import {
   SiReact,
   SiTypescript,
   SiTailwindcss,
@@ -10,7 +19,9 @@ import {
   SiNotion,
   SiDocker,
   SiKubernetes,
+  SiGithub,
   SiGithubactions,
+  SiPrometheus,
 } from "@icons-pack/react-simple-icons";
 
 const TechStackSection: React.FC = () => {
@@ -122,10 +133,8 @@ const TechStackSection: React.FC = () => {
         <div className="relative">
           {/* 左側漸層遮罩 */}
           <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
-
           {/* 右側漸層遮罩 */}
           <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
-
           {/* 跑馬燈軌道 */}
           <div className="overflow-hidden">
             <motion.div
@@ -195,58 +204,7 @@ const TechStackSection: React.FC = () => {
                 從前端 React 生態系統到後端 Node.js 微服務架構，
                 再到容器化部署和 CI/CD 自動化流程，提供企業級的開發體驗。
               </p>
-
-              {/* 技術亮點 */}
-              {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-                <div className="flex flex-col items-center space-y-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <span className="text-blue-600 text-xl">⚡</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900 mb-1">
-                      高效能
-                    </div>
-                    <div className="text-gray-500 text-sm">
-                      優化的渲染與快取
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col items-center space-y-3">
-                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                    <span className="text-green-600 text-xl">🔒</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900 mb-1">
-                      安全性
-                    </div>
-                    <div className="text-gray-500 text-sm">類型安全驗證</div>
-                  </div>
-                </div>
-                <div className="flex flex-col items-center space-y-3">
-                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                    <span className="text-purple-600 text-xl">🚀</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900 mb-1">
-                      可擴展
-                    </div>
-                    <div className="text-gray-500 text-sm">微服務架構</div>
-                  </div>
-                </div>
-                <div className="flex flex-col items-center space-y-3">
-                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                    <span className="text-orange-600 text-xl">📱</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900 mb-1">
-                      響應式
-                    </div>
-                    <div className="text-gray-500 text-sm">跨平台支援</div>
-                  </div>
-                </div>
-              </div> */}
             </div>
-
             {/* 下半部 - 系統架構示意圖區域 */}
             <div className="p-2 lg:p-4 relative ">
               <div className="bg-gray-50 p-8 lg:p-12 relative border border-gray-200 rounded-md">
@@ -259,240 +217,429 @@ const TechStackSection: React.FC = () => {
                     backgroundSize: "18px 18px",
                   }}
                 ></div>
-
-                {/* 系統架構圖 */}
-                <div className="relative z-10">
-                  <h4 className="text-2xl font-semibold text-gray-900 mb-8 text-center">
+                {/* 系統架構圖 - 分層式垂直排列 */}
+                <div
+                  className="relative z-10 font-sans"
+                  style={{
+                    fontFamily:
+                      '"Microsoft JhengHei", "微軟正黑體", "PingFang TC", "Noto Sans TC", "Helvetica Neue", Arial, "Liberation Sans", sans-serif',
+                  }}
+                >
+                  <h4 className="text-2xl font-bold text-gray-900 mb-12 text-center">
                     系統架構圖
                   </h4>
-
-                  {/* 橫向架構流程 */}
-                  <div className="flex items-center justify-center space-x-6 flex-wrap gap-y-6">
-                    {/* 前端層 */}
-                    <div className="flex flex-col items-center">
-                      <div
-                        className="bg-white/10 border-4 border-gray-300 rounded-lg p-4 px-8 shadow-sm relative"
-                        style={{
-                          boxShadow: "inset 0 1px 2px 0 rgba(0, 0, 0, 0.1)",
-                          border: "1px solid #d1d5db",
-                          outline: "1px solid #e5e7eb",
-                          outlineOffset: "6px",
-                        }}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <SiReact size={24} color="#000000" />
-                          <SiTypescript size={24} color="#000000" />
+                  <div className="flex flex-col items-center gap-10">
+                    {/* Frontend Layer */}
+                    <div className="w-full max-w-4xl relative flex items-center justify-center">
+                      <div className="relative w-full flex flex-col items-center">
+                        {/* badge 垂直置於頂端正中間，圓弧矩形 */}
+                        <div className="absolute left-1/2 -translate-x-1/2 -top-3 z-20 pointer-events-none">
+                          <div
+                            className="bg-black/90 text-white text-xs leading-loose px-5 py-1 rounded-md font-bold tracking-widest border border-white/20 text-nowrap"
+                            style={{
+                              letterSpacing: "0.1em",
+                              fontFamily: "inherit",
+                            }}
+                          >
+                            Frontend Layer
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-sm font-medium text-gray-700 mt-2">
-                        前端介面
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        React + TypeScript
+                        <div className="w-full max-w-4xl bg-gray-100/80 p-2 rounded-2xl border border-gray-200/60 backdrop-blur-sm">
+                          <div
+                            className="rounded-xl bg-white p-6 md:p-8 text-gray-700 flex flex-col md:flex-row gap-6 items-stretch shadow-sm"
+                            style={{ fontFamily: "inherit" }}
+                          >
+                            {/* 技術選型 */}
+                            <div className="flex-1 flex flex-col items-center justify-center mt-6 md:mt-0">
+                              <div className="flex items-center gap-4 mb-2">
+                                <SiReact size={30} color="#000" />
+                                <SiTailwindcss size={30} color="#000" />
+                              </div>
+                              <div className="font-bold text-gray-700 mb-1">
+                                技術選型
+                              </div>
+                              <div className="text-xs text-gray-500 text-center">
+                                React / TailwindCSS
+                              </div>
+                            </div>
+                            {/* 分隔線 */}
+                            <div className="hidden md:block w-px bg-gray-200 mx-2"></div>
+                            {/* 功能模組 */}
+                            <div className="flex-[2] grid grid-cols-2 md:grid-cols-4 gap-x-10 gap-y-4 mb-4 md:mb-0">
+                              {/* Query Builder */}
+                              <div className="flex flex-col items-center">
+                                <div className="bg-gray-100 border border-gray-200 rounded-lg p-2 mb-1">
+                                  <AdjustmentsHorizontalIcon className="w-5 h-5 text-black" />
+                                </div>
+                                <div className="text-gray-800 whitespace-nowrap">
+                                  Query Builder
+                                </div>
+                                <div className="text-xs text-gray-500 text-center whitespace-nowrap">
+                                  動態組合查詢
+                                </div>
+                              </div>
+                              {/* 分享與嵌入功能 */}
+                              <div className="flex flex-col items-center">
+                                <div className="bg-gray-100 border border-gray-200 rounded-lg p-2 mb-1">
+                                  <ShareIcon className="w-5 h-5 text-black" />
+                                </div>
+                                <div className="text-gray-800 whitespace-nowrap">
+                                  Shared & Embed
+                                </div>
+                                <div className="text-xs text-gray-500 text-center whitespace-nowrap">
+                                  一鍵分享/嵌入
+                                </div>
+                              </div>
+                              {/* 圖表生成器 */}
+                              <div className="flex flex-col items-center">
+                                <div className="bg-gray-100 border border-gray-200 rounded-lg p-2 mb-1">
+                                  <ChartPieIcon className="w-5 h-5 text-black" />
+                                </div>
+                                <div className="text-gray-800 whitespace-nowrap">
+                                  Chart Viewer
+                                </div>
+                                <div className="text-xs text-gray-500 text-center whitespace-nowrap">
+                                  ECharts 驅動
+                                </div>
+                              </div>
+                              {/* 表格檢視器 */}
+                              <div className="flex flex-col items-center">
+                                <div className="bg-gray-100 border border-gray-200 rounded-lg p-2 mb-1">
+                                  <TableCellsIcon className="w-5 h-5 text-black" />
+                                </div>
+                                <div className="text-gray-800 whitespace-nowrap">
+                                  Table Viewer
+                                </div>
+                                <div className="text-xs text-gray-500 text-center whitespace-nowrap">
+                                  資料表格展示
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-
-                    {/* 連接箭頭 1 */}
-                    <motion.div
-                      className="text-black"
-                      animate={{
-                        x: [0, 5, 0],
-                        opacity: [0.6, 1, 0.6],
-                      }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                    >
+                    {/* Arrow with Gradient Flow */}
+                    <div className="flex flex-col items-center">
                       <svg
-                        className="w-8 h-8"
+                        className="w-12 h-16"
+                        viewBox="0 0 48 64"
                         fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
                       >
+                        <defs>
+                          <linearGradient
+                            id="arrowGradient1"
+                            x1="0%"
+                            y1="0%"
+                            x2="0%"
+                            y2="100%"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor="#9ca3af"
+                              stopOpacity="0.6"
+                            />
+                            <stop
+                              offset="50%"
+                              stopColor="#6b7280"
+                              stopOpacity="0.8"
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor="#374151"
+                              stopOpacity="1"
+                            />
+                          </linearGradient>
+
+                          <linearGradient
+                            id="arrowShadow"
+                            x1="0%"
+                            y1="0%"
+                            x2="0%"
+                            y2="100%"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor="#000000"
+                              stopOpacity="0.1"
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor="#000000"
+                              stopOpacity="0.2"
+                            />
+                          </linearGradient>
+                        </defs>
+
+                        {/* Shadow */}
                         <path
+                          d="M25 8 L25 48 M25 48 L19 42 M25 48 L31 42"
+                          stroke="url(#arrowShadow)"
+                          strokeWidth="4"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
+                          opacity="0.3"
                         />
-                        {/* 添加箭頭尾巴的動畫線條 */}
-                        <motion.path
+
+                        {/* Main Arrow */}
+                        <path
+                          d="M24 6 L24 46 M24 46 L18 40 M24 46 L30 40"
+                          stroke="url(#arrowGradient1)"
+                          strokeWidth="3"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          strokeWidth={1}
-                          d="M3 12h6"
-                          initial={{ pathLength: 0 }}
-                          animate={{ pathLength: 1 }}
-                          transition={{
-                            duration: 1,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                          }}
-                          opacity={0.7}
                         />
                       </svg>
-                    </motion.div>
-
-                    {/* API 層 */}
-                    <div className="flex flex-col items-center">
-                      <div
-                        className="bg-white/10 border-4 border-gray-300 rounded-lg p-4 px-8 shadow-sm relative"
-                        style={{
-                          boxShadow: "inset 0 1px 2px 0 rgba(0, 0, 0, 0.1)",
-                          border: "1px solid #d1d5db",
-                          outline: "1px solid #e5e7eb",
-                          outlineOffset: "6px",
-                        }}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <SiNestjs size={24} color="#000000" />
-                          <SiNodedotjs size={24} color="#000000" />
+                    </div>
+                    {/* Backend Layer */}
+                    <div className="w-full max-w-4xl relative flex items-center justify-center">
+                      <div className="relative w-full flex flex-col items-center">
+                        {/* badge 垂直置於頂端正中間，圓弧矩形 */}
+                        <div className="absolute left-1/2 -translate-x-1/2 -top-3 z-20 pointer-events-none">
+                          <div
+                            className="bg-black/90 text-white text-xs leading-loose px-5 py-1 rounded-md font-bold tracking-widest border border-white/20 text-nowrap"
+                            style={{
+                              letterSpacing: "0.1em",
+                              fontFamily: "inherit",
+                            }}
+                          >
+                            Backend Layer
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-sm font-medium text-gray-700 mt-2">
-                        後端服務
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        NestJS + Node.js
+                        <div className="w-full max-w-4xl bg-gray-100/80 p-2 rounded-2xl border border-gray-200/60 backdrop-blur-sm">
+                          <div
+                            className="rounded-xl bg-white p-6 md:p-8 text-gray-700 flex flex-col md:flex-row gap-6 items-stretch shadow-sm"
+                            style={{ fontFamily: "inherit" }}
+                          >
+                            {/* 技術選型 */}
+                            <div className="flex-1 flex flex-col items-center justify-center mt-6 md:mt-0">
+                              <div className="flex items-center gap-4 mb-2">
+                                <SiNestjs size={30} color="#000" />
+                                <SiNodedotjs size={30} color="#000" />
+                              </div>
+                              <div className="font-bold text-gray-700 mb-1">
+                                技術選型
+                              </div>
+                              <div className="text-xs text-gray-500 text-center">
+                                Node.js / NestJS
+                              </div>
+                            </div>
+                            <div className="hidden md:block w-px bg-gray-200 mx-2"></div>
+                            {/* 功能模組 */}
+                            <div className="flex-[2] grid grid-cols-2 md:grid-cols-4 gap-x-10 gap-y-4 mb-4 md:mb-0">
+                              {/* Notion API */}
+                              <div className="flex flex-col items-center">
+                                <div className="bg-gray-100 border border-gray-200 rounded-lg p-2 mb-1">
+                                  <SiNotion size={20} color="#000" />
+                                </div>
+                                <div className="text-gray-800 whitespace-nowrap">
+                                  Notion API
+                                </div>
+                                <div className="text-xs text-gray-500 text-center whitespace-nowrap">
+                                  資料庫與頁面檢索
+                                </div>
+                              </div>
+                              {/* Snapshot API */}
+                              <div className="flex flex-col items-center">
+                                <div className="bg-gray-100 border border-gray-200 rounded-lg p-2 mb-1">
+                                  <CameraIcon className="w-5 h-5 text-black" />
+                                </div>
+                                <div className="text-gray-800 whitespace-nowrap">
+                                  Snapshot API
+                                </div>
+                                <div className="text-xs text-gray-500 text-center whitespace-nowrap">
+                                  快照管理
+                                </div>
+                              </div>
+                              {/* Health API */}
+                              <div className="flex flex-col items-center">
+                                <div className="bg-gray-100 border border-gray-200 rounded-lg p-2 mb-1">
+                                  <HeartIcon className="w-5 h-5 text-black" />
+                                </div>
+                                <div className="text-gray-800 whitespace-nowrap">
+                                  Health API
+                                </div>
+                                <div className="text-xs text-gray-500 text-center whitespace-nowrap">
+                                  狀態檢查
+                                </div>
+                              </div>
+                              {/* Metric */}
+                              <div className="flex flex-col items-center">
+                                <div className="bg-gray-100 border border-gray-200 rounded-lg p-2 mb-1">
+                                  <SiPrometheus size={20} color="#000" />
+                                </div>
+                                <div className="text-gray-800 whitespace-nowrap">
+                                  Metric
+                                </div>
+                                <div className="text-xs text-gray-500 text-center whitespace-nowrap">
+                                  指標監控
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-
-                    {/* 連接箭頭 2 */}
-                    <motion.div
-                      className="text-black"
-                      animate={{
-                        x: [0, 5, 0],
-                        opacity: [0.6, 1, 0.6],
-                      }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: 0.1,
-                      }}
-                    >
+                    {/* Arrow with Gradient Flow */}
+                    <div className="flex flex-col items-center">
                       <svg
-                        className="w-8 h-8"
+                        className="w-12 h-16"
+                        viewBox="0 0 48 64"
                         fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
                       >
+                        <defs>
+                          <linearGradient
+                            id="arrowGradient2"
+                            x1="0%"
+                            y1="0%"
+                            x2="0%"
+                            y2="100%"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor="#9ca3af"
+                              stopOpacity="0.6"
+                            />
+                            <stop
+                              offset="50%"
+                              stopColor="#6b7280"
+                              stopOpacity="0.8"
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor="#374151"
+                              stopOpacity="1"
+                            />
+                          </linearGradient>
+
+                          <linearGradient
+                            id="arrowShadow2"
+                            x1="0%"
+                            y1="0%"
+                            x2="0%"
+                            y2="100%"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor="#000000"
+                              stopOpacity="0.1"
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor="#000000"
+                              stopOpacity="0.2"
+                            />
+                          </linearGradient>
+                        </defs>
+
+                        {/* Shadow */}
                         <path
+                          d="M25 8 L25 48 M25 48 L19 42 M25 48 L31 42"
+                          stroke="url(#arrowShadow2)"
+                          strokeWidth="4"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
+                          opacity="0.3"
                         />
-                        {/* 添加箭頭尾巴的動畫線條 */}
-                        <motion.path
+
+                        {/* Main Arrow */}
+                        <path
+                          d="M24 6 L24 46 M24 46 L18 40 M24 46 L30 40"
+                          stroke="url(#arrowGradient2)"
+                          strokeWidth="3"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          strokeWidth={1}
-                          d="M3 12h6"
-                          initial={{ pathLength: 0 }}
-                          animate={{ pathLength: 1 }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: 0.1,
-                          }}
-                          opacity={0.7}
                         />
                       </svg>
-                    </motion.div>
-
-                    {/* 外部服務層 */}
-                    <div className="flex flex-col items-center">
-                      <div
-                        className="bg-white/10 border-4 border-gray-300 rounded-lg p-4 px-8 shadow-sm relative"
-                        style={{
-                          boxShadow: "inset 0 1px 2px 0 rgba(0, 0, 0, 0.1)",
-                          border: "1px solid #d1d5db",
-                          outline: "1px solid #e5e7eb",
-                          outlineOffset: "6px",
-                        }}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <SiNotion size={24} color="#000000" />
-                          <SiApacheecharts size={24} color="#000000" />
-                        </div>
-                      </div>
-                      <div className="text-sm font-medium text-gray-700 mt-2">
-                        外部服務
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        Notion + Charts
-                      </div>
                     </div>
-
-                    {/* 連接箭頭 3 */}
-                    <motion.div
-                      className="text-black"
-                      animate={{
-                        x: [0, 5, 0],
-                        opacity: [0.6, 1, 0.6],
-                      }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: 0.2,
-                      }}
-                    >
-                      <svg
-                        className="w-8 h-8"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                        {/* 添加箭頭尾巴的動畫線條 */}
-                        <motion.path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1}
-                          d="M3 12h6"
-                          initial={{ pathLength: 0 }}
-                          animate={{ pathLength: 1 }}
-                          transition={{
-                            duration: 1,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: 0.2,
-                          }}
-                          opacity={0.7}
-                        />
-                      </svg>
-                    </motion.div>
-
-                    {/* 部署層 */}
-                    <div className="flex flex-col items-center">
-                      <div
-                        className="bg-white/10 border-4 border-gray-300 rounded-lg p-4 px-8 shadow-sm relative"
-                        style={{
-                          boxShadow: "inset 0 1px 2px 0 rgba(0, 0, 0, 0.1)",
-                          border: "1px solid #d1d5db",
-                          outline: "1px solid #e5e7eb",
-                          outlineOffset: "6px",
-                        }}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <SiDocker size={24} color="#000000" />
-                          <SiKubernetes size={24} color="#000000" />
+                    {/* Containerized */}
+                    <div className="w-full max-w-4xl relative flex items-center justify-center">
+                      <div className="relative w-full flex flex-col items-center">
+                        {/* badge 垂直置於頂端正中間，圓弧矩形 */}
+                        <div className="absolute left-1/2 -translate-x-1/2 -top-3 z-20 pointer-events-none">
+                          <div
+                            className="bg-black/90 text-white text-xs leading-loose px-5 py-1 rounded-md font-bold tracking-widest border border-white/20 text-nowrap"
+                            style={{
+                              letterSpacing: "0.1em",
+                              fontFamily: "inherit",
+                            }}
+                          >
+                            Containerized
+                          </div>
+                        </div>
+                        <div className="w-full max-w-4xl bg-gray-100/80 p-2 rounded-2xl border border-gray-200/60 backdrop-blur-sm">
+                          <div
+                            className="rounded-xl bg-white p-6 md:p-8 text-gray-700 flex flex-col md:flex-row gap-6 items-stretch shadow-sm"
+                            style={{ fontFamily: "inherit" }}
+                          >
+                            {/* 技術選型 */}
+                            <div className="flex-1 flex flex-col items-center justify-center mt-6 md:mt-0">
+                              <div className="flex items-center gap-4 mb-2">
+                                <SiDocker size={30} color="#000" />
+                                <SiKubernetes size={30} color="#000" />
+                              </div>
+                              <div className="font-bold text-gray-700 mb-1">
+                                技術選型
+                              </div>
+                              <div className="text-xs text-gray-500 text-center">
+                                Docker / k8s
+                              </div>
+                            </div>
+                            <div className="hidden md:block w-px bg-gray-200 mx-2"></div>
+                            {/* 功能模組 */}
+                            <div className="flex-[2] grid grid-cols-2 md:grid-cols-4 gap-x-10 gap-y-4 mb-4 md:mb-0">
+                              {/* GitHub Actions */}
+                              <div className="flex flex-col items-center">
+                                <div className="bg-gray-100 border border-gray-200 rounded-lg p-2 mb-1">
+                                  <SiGithub size={20} color="#000" />
+                                </div>
+                                <div className="text-gray-800 whitespace-nowrap">
+                                  GitHub Actions
+                                </div>
+                                <div className="text-xs text-gray-500 text-center whitespace-nowrap">
+                                  CI/CD 自動化
+                                </div>
+                              </div>
+                              {/* Notion API Service */}
+                              <div className="flex flex-col items-center">
+                                <div className="bg-gray-100 border border-gray-200 rounded-lg p-2 mb-1">
+                                  <SiDocker size={20} color="#000" />
+                                </div>
+                                <div className="text-gray-800 whitespace-nowrap">
+                                  Docker
+                                </div>
+                                <div className="text-xs text-gray-500 text-center whitespace-nowrap">
+                                  建立容器映像檔
+                                </div>
+                              </div>
+                              {/* 快照儲存系統 */}
+                              <div className="flex flex-col items-center">
+                                <div className="bg-gray-100 border border-gray-200 rounded-lg p-2 mb-1">
+                                  <ArchiveBoxIcon className="w-5 h-5 text-black" />
+                                </div>
+                                <div className="text-gray-800 whitespace-nowrap">
+                                  Container Registry
+                                </div>
+                                <div className="text-xs text-gray-500 text-center whitespace-nowrap">
+                                  容器映像檔儲存
+                                </div>
+                              </div>
+                              {/* Kubernetes */}
+                              <div className="flex flex-col items-center">
+                                <div className="bg-gray-100 border border-gray-200 rounded-lg p-2 mb-1">
+                                  <SiKubernetes size={20} color="#000" />
+                                </div>
+                                <div className="text-gray-800 whitespace-nowrap">
+                                  Kubernetes
+                                </div>
+                                <div className="text-xs text-gray-500 text-center whitespace-nowrap">
+                                  雲端部署管理
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-sm font-medium text-gray-700 mt-2">
-                        容器部署
-                      </div>
-                      <div className="text-xs text-gray-500">Docker + K8s</div>
                     </div>
                   </div>
                 </div>
