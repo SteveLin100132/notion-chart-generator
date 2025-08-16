@@ -7,9 +7,9 @@ const HowToUseSection: React.FC = () => {
   // 對應每個 tab 的 wireframe 圖片
   const wireframeImages = React.useMemo(
     () => [
-      "/images/basic-feature-demo.gif",
-      "/images/advanced-filter-demo.gif",
-      "/images/share-embed-demo.gif",
+      "./images/basic-feature-demo.gif",
+      "./images/advanced-filter-demo.gif",
+      "./images/share-embed-demo.gif",
     ],
     []
   );
