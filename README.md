@@ -1,5 +1,3 @@
-![Notion Chart Generator Banner](assets/images/github-repo-banner3.png)
-
 <div align="center">
   <img src="assets/images/notion-chart-generator-simple-logo.png" />
   <h1>Notion Chart Generator</h1>
@@ -14,8 +12,6 @@
     <a href="https://stevelin100132.github.io/">About Author</a>
   </p>
   <br />
-
-  <br />
   <div>
     <img src="https://img.shields.io/github/package-json/v/stevelin100132/notion-chart-generator">
     <img src="https://img.shields.io/badge/React-18+-61dafb.svg" />
@@ -25,15 +21,15 @@
     <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2FSteveLin100132%2Fnotion-chart-generator"><img src="https://api.visitorbadge.io/api/combined?path=https%3A%2F%2Fgithub.com%2FSteveLin100132%2Fnotion-chart-generator&countColor=%23263759&style=flat" /></a>
   </div>
 </div>
+<br />
 
-<br />
-<br />
+![Notion Chart Generator Banner](assets/images/github-repo-banner3.png)
 
 Notion Chart Generator 是一款專為 Notion 使用者打造的圖表生成工具。它能夠連接您的 Notion 資料庫，將原始資料自動轉換為多種互動式圖表，協助您更直觀地分析和展示資訊。無需撰寫程式碼，只需簡單設定，即可快速產生長條圖、線圖、圓餅圖等多種視覺化報表，並支援即時分享與跨平台嵌入，讓資料應用更靈活便利。
 
-![Notion Chart Generator Usage Demo](assets/images/notion-chart-generator-basic-feature-demo.gif)
-
 ## 主要功能
+
+![Notion Chart Generator Usage Demo](assets/images/notion-chart-generator-basic-feature-demo.gif)
 
 ### 核心功能
 
