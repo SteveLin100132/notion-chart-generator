@@ -1,7 +1,8 @@
 name: CI - master
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - "master"
 
@@ -54,6 +55,7 @@ jobs:
   bump-version:
     name: Bump Version and Update GitHub Variable
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'build')
     outputs:
       new_version: ${{ steps.bump.outputs.new_version }}
     # needs: unit-test # 等 unit-test 成功才執行
@@ -87,6 +89,7 @@ jobs:
   build-image:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'build')
     needs:
       # - unit-test # 等 unit-test 成功才執行
       - bump-version # 等 bump-version 成功才執行
