@@ -17,10 +17,10 @@ const HeroSection: React.FC = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-background via-transparent to-gray-50/80"></div>
 
       {/* White Gradient Overlay for Fade Out Effect at bottom - more gentle */}
-      <div className="absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-white via-white/60 to-transparent z-30 pointer-events-none"></div>
+      <div className="hidden md:block absolute bottom-0 left-0 w-full h-80 bg-gradient-to-t from-white via-white/70 to-transparent z-30 pointer-events-none"></div>
 
       <div className="relative container mx-auto px-4 py-12 lg:py-16">
-        <div className="flex flex-col h-[calc(75vh-8rem)]">
+        <div className="flex flex-col h-fit">
           {/* Top Content - Text Introduction */}
           <motion.div
             initial={{ opacity: 0, y: -30 }}
@@ -120,7 +120,7 @@ const HeroSection: React.FC = () => {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="relative z-10 w-full max-w-6xl mx-auto mt-4 flex-1 flex items-end"
+            className="relative z-10 w-full max-w-6xl mx-auto mt-4 flex-1 flex items-end hidden md:block"
           >
             {/* App preview image that extends to bottom */}
             <div className="w-full">
