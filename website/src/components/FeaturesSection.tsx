@@ -31,15 +31,15 @@ const QueryBuilderWireframe: React.FC = () => {
         <div className="p-4 space-y-4">
           {/* Filter Row 1 */}
           <div className="flex items-center gap-2">
-            <div className="flex-shrink-0 text-xs text-amber-600 bg-amber-100 border border-amber-300 px-2 py-1 rounded text-center font-medium w-[36px]">
+            <div className="flex-shrink-0 text-xs text-amber-600 bg-amber-100 border border-amber-300 px-2 py-1 rounded text-center font-medium">
               AND
             </div>
             <div className="flex items-center gap-2 flex-1">
               <div className="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded text-xs text-gray-600 w-[65px] text-center">
-                Property
+                Date
               </div>
               <div className="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded text-xs text-gray-600 w-[55px] text-center">
-                equals
+                after
               </div>
               <div className="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded text-xs text-gray-600 flex-1 text-center">
                 Value
@@ -54,7 +54,7 @@ const QueryBuilderWireframe: React.FC = () => {
           <div className="flex items-center gap-2">
             <div className="flex-shrink-0 w-[36px]"></div>
             <div className="flex items-center gap-2 flex-1">
-              <div className="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded text-xs text-gray-600 w-[65px] text-center">
+              <div className="px-3 py-1.5 ml-2 bg-gray-100 border border-gray-300 rounded text-xs text-gray-600 w-[65px] text-center">
                 Status
               </div>
               <div className="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded text-xs text-gray-600 w-[55px] text-center">
@@ -78,7 +78,7 @@ const QueryBuilderWireframe: React.FC = () => {
 
             {/* Sub-group Filter 1 */}
             <div className="flex items-center gap-2">
-              <div className="flex-shrink-0 text-xs text-purple-600 bg-purple-100 border border-purple-300 px-1.5 py-1 rounded text-center font-medium min-w-[28px]">
+              <div className="flex-shrink-0 text-xs text-purple-600 bg-purple-100 border border-purple-300 px-1.5 py-1 rounded text-center font-medium min-w-[42px]">
                 OR
               </div>
               <div className="flex items-center gap-2 flex-1">

@@ -115,7 +115,7 @@ const TechStackSection: React.FC = () => {
           className="text-center max-w-3xl mx-auto mb-16"
         >
           <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6">
-            現代化
+            現代化的
             <span className="relative inline-block px-3 py-1 mx-1">
               <span className="absolute inset-0 bg-black transform -rotate-2 rounded-md"></span>
               <span className="relative inline-block text-white font-bold transform -rotate-2">

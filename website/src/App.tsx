@@ -5,6 +5,7 @@ import FeaturesSection from "./components/FeaturesSection";
 import Footer from "./components/Footer";
 import { useScrollAnimation } from "./hooks/useScrollAnimation";
 import TechStackSection from "./components/TechStackSection";
+import HowToUseSection from "./components/HowToUseSection";
 
 function App() {
   useScrollAnimation();
@@ -33,7 +34,7 @@ function App() {
           <HeroSection />
           <FeaturesSection />
           <TechStackSection />
-          {/* <HowToUseSection /> */}
+          <HowToUseSection />
         </main>
         <Footer />
       </div>
