@@ -1,15 +1,19 @@
-<div align="center">
-  <!-- <img src="assets/images/notion-chart-generator-logo.png" width="100" /> -->
-  <img src="assets/images/notion-chart-generator-title.png" />
-  <br />
-  <br />
-  <i>
-    一個採用現代前後端分離架構的 Web 應用程式，使用 NestJS + Next.js 技術棧，能夠連接 Notion 資料庫並將資料轉換為互動式圖表。支援多種圖表類型、資料聚合計算、即時分享和跨平台嵌入功能。
-  </i>
-  <br />
-  <br />
+![Notion Chart Generator Banner](assets/images/github-repo-banner3.png)
 
-![Notion Chart Generator Usage Demo](assets/images/notion-chart-generator-usage-demo.gif)
+<div align="center">
+  <img src="assets/images/notion-chart-generator-simple-logo.png" />
+  <h1>Notion Chart Generator</h1>
+  <br />
+  <p>
+    <b>
+      一個採用現代前後端分離架構的 Web 應用程式，使用 NestJS + Next.js 技術棧，能夠連接 Notion 資料庫並將資料轉換為互動式圖表。支援多種圖表類型、資料聚合計算、即時分享和跨平台嵌入功能。
+    </b>
+    <br />
+    <a href="https://stevelin100132.github.io/notion-chart-generator/">Website</a> | 
+    <a href="https://stevelin100132.github.io/notion-chart-generator/">Documentation(TODO)</a> |
+    <a href="https://stevelin100132.github.io/">About Author</a>
+  </p>
+  <br />
 
   <br />
   <div>
@@ -26,6 +30,8 @@
 <br />
 
 Notion Chart Generator 是一款專為 Notion 使用者打造的圖表生成工具。它能夠連接您的 Notion 資料庫，將原始資料自動轉換為多種互動式圖表，協助您更直觀地分析和展示資訊。無需撰寫程式碼，只需簡單設定，即可快速產生長條圖、線圖、圓餅圖等多種視覺化報表，並支援即時分享與跨平台嵌入，讓資料應用更靈活便利。
+
+![Notion Chart Generator Usage Demo](assets/images/notion-chart-generator-basic-feature-demo.gif)
 
 ## 主要功能
 

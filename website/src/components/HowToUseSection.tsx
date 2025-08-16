@@ -364,7 +364,7 @@ const HowToUseSection: React.FC = () => {
             立即體驗 Notion Chart Generator，將你的 Notion
             資料轉換成精美的圖表。 開源免費，支援多種部署方式。
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
             <Button
               className="rounded-full"
               size="lg"

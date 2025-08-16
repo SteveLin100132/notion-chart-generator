@@ -180,9 +180,9 @@ const Footer: React.FC = () => {
           className="border-t border-gray-600 mt-8 pt-8"
         >
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="flex items-center space-x-2 text-gray-300">
+            <div className="space-x-2 text-gray-300">
               <span>© {currentYear} Notion Chart Generator. Made with</span>
-              <Heart className="w-4 h-4 text-red-400" />
+              <Heart className="w-4 h-4 text-red-400 inline-block" />
               <span>
                 by &nbsp;
                 <a
