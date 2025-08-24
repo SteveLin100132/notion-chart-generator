@@ -2,10 +2,11 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - certificate.yaml
+  - backendconfig.yaml
   - configmap.yaml
   - deployment.yaml
   - ingress.yaml
+  - managed-certificate.yaml
   - persistent-volume.yaml
   - service.yaml
 

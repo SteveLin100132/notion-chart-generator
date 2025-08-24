@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.8] - 2025-08-24
+
+### Added
+
+- **DOKS 自動部署 GitHub Action**
+  - 新增 `.github/workflows/deploy-doks.yaml`，當 master 分支有 push 時自動部署到 DigitalOcean Kubernetes (DOKS)
+  - 支援 APP_VERSION 參數自動替換，並整合 doctl/kubectl/kustomize 流程
+- **K8s/DOKS 部署教學與 cert-manager HTTPS 範例**
+  - 新增 `k8s/DOKS/README.md`，詳細記錄 DOKS 連線、nginx ingress controller 安裝、cert-manager 憑證申請與 Ingress TLS 設定教學
+  - 包含 Let's Encrypt ClusterIssuer、Certificate、Ingress TLS YAML 範例
+
+### Changed
+
+- 部署流程優化，支援 DOKS 自動化，README 文件同步更新
+
 ## [1.1.7] - 2025-08-10
 
 ### Fixed

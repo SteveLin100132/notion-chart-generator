@@ -4,14 +4,12 @@ metadata:
   name: notion-chart-generator-ingress
   labels:
     app: notion-chart-generator
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    networking.gke.io/managed-certificates: notion-chart-generator-cert
 spec:
-  ingressClassName: nginx
-  tls:
-    - hosts:
-        - 188-166-204-94.nip.io
-      secretName: notion-chart-generator-tls
   rules:
-    - host: 188-166-204-94.nip.io
+    - host: 34-13-115-184.nip.io
       http:
         paths:
           - path: /api

@@ -3,7 +3,7 @@ name: Deploy to GKE
 on:
   push:
     branches:
-      - deploy
+      - deploy-gke
 
 env:
   GITHUB_ACTOR: ${{ github.actor }}
@@ -29,7 +29,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-      
+
       - name: Get GKE credentials
         run: |
           gcloud container clusters get-credentials  ${{ secrets.GKE_CLUSTER }} --zone $GKE_ZONE --project ${{ secrets.GCP_PROJECT_ID }}
