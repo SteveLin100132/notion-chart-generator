@@ -2,10 +2,13 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: notion-chart-snapshots-pvc
+  labels:
+    app: notion-chart-generator
+    component: storage
 spec:
   accessModes:
     - ReadWriteOnce
+  storageClassName: standard-rwo # GKE Autopilot 預設存儲類
   resources:
     requests:
       storage: 1Gi
-  storageClassName: do-block-storage

@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notion-chart-generator
+  labels:
+    app: notion-chart-generator
+    version: "1.0.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notion-chart-generator
+  template:
+    metadata:
+      labels:
+        app: notion-chart-generator
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+        runAsGroup: 65533
+      containers:
+        - name: notion-chart-generator
+          image: ghcr.io/stevelin100132/notion-chart-generator # Use the image from the kustomization.yaml
+          ports:
+            - containerPort: 3000
+              name: frontend
+            - containerPort: 3001
+              name: backend
+          envFrom:
+            - configMapRef:
+                name: notion-chart-generator-config
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+            - name: BACKEND_PORT
+              value: "3001"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+              ephemeral-storage: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: snapshots-storage
+              mountPath: /app/backend/snapshots
+      volumes:
+        - name: snapshots-storage
+          persistentVolumeClaim:
+            claimName: notion-chart-snapshots-pvc
+      # imagePullSecrets:
+      #   - name: ghcr-secret

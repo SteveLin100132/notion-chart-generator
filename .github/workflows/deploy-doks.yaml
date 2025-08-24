@@ -1,0 +1,43 @@
+name: Deploy to DOKS
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  GITHUB_ACTOR: ${{ github.actor }}
+  APP_VERSION: ${{ vars.APP_VERSION }}
+  IMAGE_NAME: ${{ vars.IMAGE_NAME }}
+  IMAGE_REPO: ${GITHUB_ACTOR,,}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Save kubeconfig
+        run: doctl kubernetes cluster kubeconfig save ${{ secrets.DOKS_CLUSTER_ID }}
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: "latest"
+
+      - name: Replace APP_VERSION in kustomization.yaml
+        run: |
+          export APP_VERSION=${{ env.APP_VERSION }}
+          envsubst < ./k8s/kustomization.yaml > ./k8s/kustomization.yaml.tmp
+          mv ./k8s/kustomization.yaml.tmp ./k8s/kustomization.yaml
+
+      - name: Deploy with kustomize
+        run: |
+          kustomize build ./k8s | kubectl apply -f -
