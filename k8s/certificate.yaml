@@ -8,6 +8,6 @@ spec:
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
-  commonName: 188-166-204-94.nip.io
+  commonName: notion-chart-generator.188-166-204-94.nip.io
   dnsNames:
-    - 188-166-204-94.nip.io
+    - notion-chart-generator.188-166-204-94.nip.io
