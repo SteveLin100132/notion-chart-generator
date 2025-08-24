@@ -8,10 +8,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - 188-166-204-94.nip.io
+        - notion-chart-generator.188-166-204-94.nip.io
       secretName: notion-chart-generator-tls
   rules:
-    - host: 188-166-204-94.nip.io
+    - host: notion-chart-generator.188-166-204-94.nip.io
       http:
         paths:
           - path: /api
